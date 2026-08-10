@@ -20,6 +20,7 @@ function TheoryPickCard({ def, picked, onToggle }: { def: TheoryDef; picked: boo
         picked ? 'border-accent2 bg-accent2/10 shadow-glow' : 'border-white/10 bg-panel hover:border-white/30'
       }`}
     >
+      <img src={def.image} alt={def.name} className="w-full aspect-[16/9] object-cover rounded-md -mt-1" />
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-wide text-accent2">{def.topic}</span>
         <Stars n={def.stars} />

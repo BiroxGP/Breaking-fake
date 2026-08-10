@@ -1,13 +1,18 @@
 export type CatalystType = 'Artefice' | 'Luogo' | 'Mezzo' | 'Prova' | 'Scopo';
 
 export type TheoryTopic =
-  | 'Alieno'
-  | 'Politica'
-  | 'Scienza'
+  | 'Clima ed Elementi Terrestri'
+  | 'Controllo sulle Masse'
+  | 'Dittatura Sanitaria'
+  | 'Extraterrestri'
   | 'Misteri e Leggende'
-  | 'Teorie Terrestri'
-  | 'Occulto'
-  | 'Tecnologia';
+  | 'Negazionismo Bizzarro'
+  | 'Nuovo Ordine Mondiale'
+  | 'Personaggi Storici Ancora Vivi'
+  | 'Revisionismo Storico'
+  | 'Teoria della Simulazione'
+  | 'Teorie Spaziali'
+  | 'Teorie Terrestri';
 
 export type NewsCategory = 'Principale' | 'Secondaria';
 
@@ -22,6 +27,7 @@ export interface TheoryDef {
   flavor: string;
   slotA: CatalystType;
   slotB: CatalystType;
+  image: string;
 }
 
 export interface CatalystDef {

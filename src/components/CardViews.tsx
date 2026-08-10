@@ -190,6 +190,7 @@ export function TheoryCardView({
           <span className="text-gold font-bold">{theory.def.basePV}pt</span>
         </span>
       </div>
+      <img src={theory.def.image} alt={theory.def.name} className="w-full aspect-[16/9] object-cover" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
         <div className="text-[10px] text-white/50 leading-snug mt-0.5 line-clamp-3">{theory.def.flavor}</div>
