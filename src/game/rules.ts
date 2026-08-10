@@ -21,7 +21,7 @@ export function canCloseTheory(theory: TheoryInstance): boolean {
   const news = theory.attachedNews;
   if (news.length < minCount) return false;
   if (stars === 1) return true;
-  const hasPrincipaleOrVirale = news.some(isEffectivelyPrincipale);
+  const hasPrincipaleOrVirale = news.some((n) => isEffectivelyPrincipale(n, theory));
   if (stars === 2) return hasPrincipaleOrVirale;
   return hasPrincipaleOrVirale && news.length >= 2;
 }
@@ -33,7 +33,7 @@ export function closeReasonIfBlocked(theory: TheoryInstance): string | null {
   const minCount = minRequiredNews(theory);
   const news = theory.attachedNews;
   if (news.length < minCount) return `Servono almeno ${minCount} Notizie collegate (attualmente ${news.length}).`;
-  if (stars >= 2 && !news.some(isEffectivelyPrincipale)) {
+  if (stars >= 2 && !news.some((n) => isEffectivelyPrincipale(n, theory))) {
     return 'Serve almeno una Notizia Principale (o diventata Virale).';
   }
   if (stars === 3 && news.length < 2) {

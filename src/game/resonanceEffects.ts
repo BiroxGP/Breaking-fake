@@ -50,7 +50,10 @@ export function applyResonanceEffect(
 
   switch (effectId) {
     case 'fuori_contesto': {
-      const effectiveSecondary = !news.categoryOverridePrincipale && news.def.category === 'Secondaria' && levelIndex(news.level) < levelIndex('Virale');
+      const effectiveSecondary =
+        !news.categoryOverridePrincipale &&
+        newsCategoryOnTheory(news, theory) === 'Secondaria' &&
+        levelIndex(news.level) < levelIndex('Virale');
       if (effectiveSecondary) {
         news.pointsOverrideZero = true;
         detail = 'notizia secondaria: vale 0 punti.';
@@ -139,16 +142,28 @@ export function applyResonanceEffect(
   return { detail, removeFromTheory };
 }
 
-export function isEffectivelyPrincipale(news: NewsInstance): boolean {
-  if (news.categoryOverridePrincipale) return true;
-  if (levelIndex(news.level) >= levelIndex('Virale')) return true;
-  return news.def.category === 'Principale';
+/** A News's Principale/Secondaria status depends on which Theory it's attached to: it matches
+ * either the Theory's topic against categoriaPrincipale or categoriaSecondaria on the card. */
+export function newsCategoryOnTheory(news: NewsInstance, theory: TheoryInstance): 'Principale' | 'Secondaria' | null {
+  if (news.def.categoriaPrincipale === theory.def.topic) return 'Principale';
+  if (news.def.categoriaSecondaria === theory.def.topic) return 'Secondaria';
+  return null;
 }
 
-export function newsScoreContribution(news: NewsInstance): number {
+export function canAttachNewsToTheory(news: { def: { categoriaPrincipale: string; categoriaSecondaria: string } }, theory: TheoryInstance): boolean {
+  return news.def.categoriaPrincipale === theory.def.topic || news.def.categoriaSecondaria === theory.def.topic;
+}
+
+export function isEffectivelyPrincipale(news: NewsInstance, theory: TheoryInstance): boolean {
+  if (news.categoryOverridePrincipale) return true;
+  if (levelIndex(news.level) >= levelIndex('Virale')) return true;
+  return newsCategoryOnTheory(news, theory) === 'Principale';
+}
+
+export function newsScoreContribution(news: NewsInstance, theory: TheoryInstance): number {
   if (news.pointsOverrideZero) return 0;
   let value = LEVEL_POINTS[news.level];
-  const principale = isEffectivelyPrincipale(news);
+  const principale = isEffectivelyPrincipale(news, theory);
   if (!principale) value = Math.ceil(value / 2);
   if (news.pointsCapAt2) value = Math.min(value, 2);
   if (news.pointsHalved) value = Math.floor(value / 2);

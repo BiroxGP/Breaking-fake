@@ -1,5 +1,5 @@
 import type { GameState, ScoreBreakdown, TheoryInstance } from '../types';
-import { LEVEL_ORDER, newsScoreContribution } from './resonanceEffects';
+import { LEVEL_ORDER, newsCategoryOnTheory, newsScoreContribution } from './resonanceEffects';
 
 function coerenzaTestualeBonus(theory: TheoryInstance): number {
   let bonus = 0;
@@ -14,7 +14,11 @@ function clickbaiterQualifies(theory: TheoryInstance): boolean {
   if (theory.attachedNews.length === 0) return false;
   const viraleIdx = LEVEL_ORDER.indexOf('Virale');
   return theory.attachedNews.every(
-    (n) => n.def.category === 'Secondaria' && !n.categoryOverridePrincipale && !n.pointsOverrideZero && LEVEL_ORDER.indexOf(n.level) >= viraleIdx,
+    (n) =>
+      newsCategoryOnTheory(n, theory) === 'Secondaria' &&
+      !n.categoryOverridePrincipale &&
+      !n.pointsOverrideZero &&
+      LEVEL_ORDER.indexOf(n.level) >= viraleIdx,
   );
 }
 
@@ -33,7 +37,7 @@ export function computeScores(state: GameState): Record<string, ScoreBreakdown> 
     for (const t of closed) {
       theoryValue += t.def.basePV;
       catalystValue += (t.slotA.filled?.def.points ?? 0) + (t.slotB.filled?.def.points ?? 0);
-      newsValue += t.attachedNews.reduce((sum, n) => sum + newsScoreContribution(n), 0);
+      newsValue += t.attachedNews.reduce((sum, n) => sum + newsScoreContribution(n, t), 0);
       coerenzaTestuale += coerenzaTestualeBonus(t);
       if (clickbaiterQualifies(t)) clickbaiterSeriale += 5;
     }

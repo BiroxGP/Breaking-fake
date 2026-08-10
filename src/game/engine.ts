@@ -8,7 +8,7 @@ import type {
   TheoryInstance,
 } from '../types';
 import { nextUid, shuffle } from './ids';
-import { applyResonanceEffect } from './resonanceEffects';
+import { applyResonanceEffect, canAttachNewsToTheory } from './resonanceEffects';
 import { canCloseTheory, maxAttachableNews } from './rules';
 import { computeScores } from './scoring';
 
@@ -173,6 +173,12 @@ export function attachNews(
   if (!theory) return { state: prev, error: 'Teoria non trovata.' };
   if (theory.attachedNews.length >= maxAttachableNews(theory)) {
     return { state: prev, error: 'Questa Teoria ha già il numero massimo di Notizie collegate.' };
+  }
+  if (!canAttachNewsToTheory(card, theory)) {
+    return {
+      state: prev,
+      error: `"${card.def.name}" non è compatibile con il topic "${theory.def.topic}" di questa Teoria.`,
+    };
   }
 
   const isOpponent = theory.ownerId !== actingPlayerId;

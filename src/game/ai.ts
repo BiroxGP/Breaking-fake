@@ -12,7 +12,8 @@ import {
   submitDraftPick,
 } from './engine';
 import { canCloseTheory, maxAttachableNews } from './rules';
-import { LEVEL_POINTS } from './resonanceEffects';
+import { LEVEL_POINTS, canAttachNewsToTheory } from './resonanceEffects';
+import type { NewsInstance } from '../types';
 
 const NEGATIVE_EFFECTS: ResonanceEffectId[] = [
   'fuori_contesto',
@@ -61,10 +62,12 @@ function findOwnSlotForCatalyst(theories: TheoryInstance[], catalystType: string
   return null;
 }
 
-function findOwnSpotForNews(theories: TheoryInstance[]) {
+function findSpotForNews(theories: TheoryInstance[], news: NewsInstance) {
   for (const t of theories) {
     if (t.closed) continue;
-    if (t.attachedNews.length < maxAttachableNews(t)) return t;
+    if (t.attachedNews.length >= maxAttachableNews(t)) continue;
+    if (!canAttachNewsToTheory(news, t)) continue;
+    return t;
   }
   return null;
 }
@@ -103,9 +106,9 @@ export function aiAttemptSingleAction(initial: GameState): { state: GameState; a
     }
   }
 
-  const newsCard = player.hand.find((c) => c.kind === 'news');
-  if (newsCard && newsCard.kind === 'news') {
-    const spot = findOwnSpotForNews(player.theories);
+  const newsCards = player.hand.filter((c): c is NewsInstance => c.kind === 'news');
+  for (const newsCard of newsCards) {
+    const spot = findSpotForNews(player.theories, newsCard);
     if (spot) {
       const res = attachNews(initial, playerId, newsCard.uid, spot.uid);
       if (!res.error) return { state: res.state, acted: true };
@@ -122,9 +125,9 @@ export function aiAttemptSingleAction(initial: GameState): { state: GameState; a
       }
     }
   }
-  if (newsCard && newsCard.kind === 'news') {
+  for (const newsCard of newsCards) {
     for (const opp of opponents) {
-      const spot = findOwnSpotForNews(opp.theories);
+      const spot = findSpotForNews(opp.theories, newsCard);
       if (spot) {
         const res = attachNews(initial, playerId, newsCard.uid, spot.uid);
         if (!res.error) return { state: res.state, acted: true };

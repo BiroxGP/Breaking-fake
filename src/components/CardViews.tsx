@@ -1,6 +1,6 @@
 import { CircleDot, Flame, Newspaper, Zap } from 'lucide-react';
 import type { CatalystInstance, NewsInstance, ResonanceInstance, TheoryInstance } from '../types';
-import { LEVEL_LABELS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
+import { LEVEL_LABELS, LEVEL_POINTS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
 
 function Stars({ n }: { n: number }) {
@@ -61,14 +61,17 @@ export function NewsCardView({
   onClick,
   selected,
   small,
+  theory,
 }: {
   card: NewsInstance;
   onClick?: () => void;
   selected?: boolean;
   small?: boolean;
+  /** When known (e.g. attached, or being reacted to), resolves the real Principale/Secondaria status and score. */
+  theory?: TheoryInstance;
 }) {
-  const principale = isEffectivelyPrincipale(card);
-  const points = newsScoreContribution(card);
+  const principale = theory ? isEffectivelyPrincipale(card, theory) : false;
+  const points = theory ? newsScoreContribution(card, theory) : LEVEL_POINTS[card.level];
   return (
     <button
       type="button"
@@ -84,10 +87,11 @@ export function NewsCardView({
         }`}
       >
         <span className="text-[10px] uppercase tracking-wide text-white flex items-center gap-1">
-          <Newspaper size={11} /> {card.def.category}
+          <Newspaper size={11} /> {theory ? (principale ? 'Principale' : 'Secondaria') : LEVEL_LABELS[card.level]}
         </span>
         <span className="text-[10px] font-bold text-white">{points}pt</span>
       </div>
+      {!small && <img src={card.def.image} alt={card.def.name} className="w-full aspect-[4/3] object-cover" />}
       <div className="p-2 flex-1 flex flex-col gap-1">
         <span className="text-[9px] text-accent2 font-bold uppercase tracking-wide">
           {LEVEL_LABELS[card.level]}
@@ -95,6 +99,11 @@ export function NewsCardView({
         </span>
         {card.pointsOverrideZero && <span className="text-[9px] text-accent font-bold">VALORE AZZERATO</span>}
         <div className="font-display text-base leading-tight text-white">{card.def.name}</div>
+        {!small && (
+          <div className="text-[9px] text-white/40 leading-snug">
+            Principale: {card.def.categoriaPrincipale} · Secondaria: {card.def.categoriaSecondaria}
+          </div>
+        )}
         {!small && <div className="text-[10px] text-white/50 leading-snug">{card.def.flavor}</div>}
       </div>
     </button>
@@ -252,13 +261,13 @@ export function TheoryCardView({
                 onNewsClick?.(n.uid);
               }}
               className={`px-1 py-0.5 rounded ${
-                isEffectivelyPrincipale(n) ? 'bg-accent/30 text-red-200' : 'bg-slate-600/40 text-slate-200'
+                isEffectivelyPrincipale(n, theory) ? 'bg-accent/30 text-red-200' : 'bg-slate-600/40 text-slate-200'
               } ${n.pointsOverrideZero ? 'line-through opacity-50' : ''} ${
                 targetable ? 'ring-1 ring-accent2 animate-pulse cursor-pointer' : ''
               }`}
               title={`${n.def.name} — ${LEVEL_LABELS[n.level]}`}
             >
-              {n.def.name.length > 14 ? `${n.def.name.slice(0, 14)}…` : n.def.name} ({newsScoreContribution(n)})
+              {n.def.name.length > 14 ? `${n.def.name.slice(0, 14)}…` : n.def.name} ({newsScoreContribution(n, theory)})
             </button>
           );
         })}

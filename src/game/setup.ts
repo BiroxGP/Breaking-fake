@@ -48,14 +48,10 @@ function buildResonanceInstances(copies: number): ResonanceInstance[] {
 }
 
 export function createGame(configs: NewPlayerConfig[]): GameState {
-  const playerCount = configs.length;
-  const newsCopiesN = playerCount >= 4 ? 5 : 4;
-
-  // Il mazzo Catalizzatori riproduce esattamente le 60 carte fisiche ufficiali (1 copia ciascuna).
+  // Ogni mazzo riproduce esattamente le carte fisiche ufficiali (1 copia ciascuna).
   let catalystDeck = shuffle(buildCatalystInstances(1));
-  let newsDeck = shuffle(buildNewsInstances(newsCopiesN));
+  let newsDeck = shuffle(buildNewsInstances(1));
   const resonanceDeck = shuffle(buildResonanceInstances(4));
-  // Il mazzo Teorie riproduce esattamente le 48 carte fisiche ufficiali (1 copia ciascuna).
   const theoryDeck = shuffle([...THEORIES]);
 
   const players: Player[] = configs.map((c, i) => ({

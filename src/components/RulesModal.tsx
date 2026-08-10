@@ -39,10 +39,16 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
           giocatore alla sinistra di chi l'ha piazzata) possono giocare carte Risonanza per alterarla.
         </Section>
 
+        <Section title="Notizie compatibili">
+          Ogni Notizia indica due Categorie (es. "Principale: Extraterrestri" / "Secondaria: Misteri e
+          Leggende"): può essere collegata solo a una Teoria il cui topic corrisponde a una delle due, e
+          conta come Principale o Secondaria di conseguenza — non è una proprietà fissa della carta.
+        </Section>
+
         <Section title="Chiudere una Teoria">
           Servono entrambi gli slot Catalizzatore occupati, più un numero minimo di Notizie collegate pari
           alle Stelle di difficoltà meno 1. Dalle 2 stelle in su serve almeno una Notizia Principale (o
-          Secondaria diventata Virale).
+          Secondaria diventata Virale) su quella Teoria.
         </Section>
 
         <Section title="Punteggio finale">

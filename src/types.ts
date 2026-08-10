@@ -18,6 +18,10 @@ export type NewsCategory = 'Principale' | 'Secondaria';
 
 export type DiffusionLevel = 'Sconosciuta' | 'Emergente' | 'Popolare' | 'Virale' | 'TopSecret';
 
+/** A News's Principale/Secondaria status is not fixed: it depends on which Theory it's attached
+ * to. `categoriaPrincipale`/`categoriaSecondaria` are Theory topics; a News can only be attached
+ * to a Theory whose topic matches one of the two, and counts as that category on that Theory. */
+
 export interface TheoryDef {
   id: string;
   name: string;
@@ -43,9 +47,12 @@ export interface CatalystDef {
 export interface NewsDef {
   id: string;
   name: string;
-  category: NewsCategory;
+  categoriaPrincipale: TheoryTopic;
+  categoriaSecondaria: TheoryTopic;
   startLevel: DiffusionLevel;
+  points: number;
   flavor: string;
+  image: string;
 }
 
 export type ResonanceEffectId =

@@ -5,6 +5,7 @@ import { Hotseat } from './Hotseat';
 import { CatalystCardView, NewsCardView, ResonanceCardView, TheoryCardView } from './CardViews';
 import { findTheory } from '../game/engine';
 import { maxAttachableNews } from '../game/rules';
+import { canAttachNewsToTheory } from '../game/resonanceEffects';
 
 type ImmediateTarget = { theoryUid: string; newsUid: string } | { theoryUid: string; slotKey: 'slotA' | 'slotB' };
 
@@ -185,7 +186,8 @@ function MainBoard(props: Props) {
     if (!selected || selected.kind !== 'news') return false;
     const theory = findTheory(state, theoryUid);
     if (!theory || theory.closed) return false;
-    return theory.attachedNews.length < maxAttachableNews(theory);
+    if (theory.attachedNews.length >= maxAttachableNews(theory)) return false;
+    return canAttachNewsToTheory(selected, theory);
   };
 
   const canTargetNews = () => selected?.kind === 'resonance' && selected.def.type === 'Immediata' && !isInsabbiamento;
@@ -301,6 +303,8 @@ function MainBoard(props: Props) {
             ? 'Insabbiamento: scegli una Notizia da colpire, oppure un Catalizzatore su una Teoria senza Notizie collegate.'
             : selected?.kind === 'resonance'
             ? 'Scegli una Notizia in gioco (anche avversaria) da colpire con questa carta Immediata.'
+            : selected?.kind === 'news'
+            ? 'Una Notizia si può collegare solo a una Teoria il cui topic corrisponde alla sua Categoria Principale o Secondaria (evidenziate qui sopra).'
             : 'Le carte Risonanza "Reazione" si giocano solo durante la Finestra di Reazione. Le carte "Immediata" si possono giocare ora: selezionale e scegli il bersaglio.'}
         </p>
       </div>
@@ -358,9 +362,9 @@ function ReactionPanel({
         <strong className="text-accent2">{reactor.name}</strong>: gioca una Risonanza o passa.
       </p>
 
-      {news && (
+      {news && theory && (
         <div className="scale-110">
-          <NewsCardView card={news} />
+          <NewsCardView card={news} theory={theory} />
         </div>
       )}
 
