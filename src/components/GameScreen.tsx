@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { BookOpen, ListChecks, ScrollText, Zap } from 'lucide-react';
+import { BookOpen, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
 import type { GameState, HandCard } from '../types';
 import { Hotseat } from './Hotseat';
+import { HoverPreviewProvider } from './HoverPreview';
 import { CatalystCardView, NewsCardView, ResonanceCardView, TheoryCardView } from './CardViews';
 import { findTheory } from '../game/engine';
 import { maxAttachableNews } from '../game/rules';
@@ -21,42 +22,57 @@ interface Props {
   onResolveRecycle: (keepUid: string) => void;
   onPlayImmediate: (cardUid: string, target: ImmediateTarget) => void;
   onShowRules: () => void;
+  onEndGame: () => void;
 }
 
 export function GameScreen(props: Props) {
   const { state } = props;
   const [showLog, setShowLog] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
 
   const reactorId = state.pendingReaction?.queue[state.pendingReaction.currentIndex] ?? null;
   const reactor = reactorId ? state.players.find((p) => p.id === reactorId) : null;
   const cp = state.players[state.currentPlayerIndex];
 
   return (
-    <div className="min-h-screen pb-4">
-      <TopBar state={state} onShowRules={props.onShowRules} onToggleLog={() => setShowLog((s) => !s)} />
+    <HoverPreviewProvider>
+      <div className="min-h-screen pb-4">
+        <TopBar
+          state={state}
+          onShowRules={props.onShowRules}
+          onToggleLog={() => setShowLog((s) => !s)}
+          onRequestEndGame={() => setShowEndConfirm(true)}
+        />
 
-      {state.phase === 'reaction' && reactor ? (
-        reactor.isAI ? (
-          <ThinkingPanel name={reactor.name} label="sta valutando come reagire" />
+        {state.phase === 'reaction' && reactor ? (
+          reactor.isAI ? (
+            <ThinkingPanel name={reactor.name} label="sta valutando come reagire" />
+          ) : (
+            <Hotseat
+              key={`${state.pendingReaction!.newsUid}-${state.pendingReaction!.currentIndex}`}
+              revealKey={`reaction-${state.pendingReaction!.newsUid}-${state.pendingReaction!.currentIndex}`}
+              name={reactor.name}
+            >
+              <ReactionPanel state={state} onPlay={props.onPlayResonance} onPass={props.onPassReaction} />
+            </Hotseat>
+          )
+        ) : cp.isAI ? (
+          <ThinkingPanel name={cp.name} label="sta giocando" />
         ) : (
-          <Hotseat
-            key={`${state.pendingReaction!.newsUid}-${state.pendingReaction!.currentIndex}`}
-            revealKey={`reaction-${state.pendingReaction!.newsUid}-${state.pendingReaction!.currentIndex}`}
-            name={reactor.name}
-          >
-            <ReactionPanel state={state} onPlay={props.onPlayResonance} onPass={props.onPassReaction} />
+          <Hotseat key={`${state.turnNumber}-${state.currentPlayerIndex}`} revealKey={`turn-${state.turnNumber}-${state.currentPlayerIndex}`} name={cp.name}>
+            <MainBoard {...props} />
           </Hotseat>
-        )
-      ) : cp.isAI ? (
-        <ThinkingPanel name={cp.name} label="sta giocando" />
-      ) : (
-        <Hotseat key={`${state.turnNumber}-${state.currentPlayerIndex}`} revealKey={`turn-${state.turnNumber}-${state.currentPlayerIndex}`} name={cp.name}>
-          <MainBoard {...props} />
-        </Hotseat>
-      )}
+        )}
 
-      {showLog && <LogPanel state={state} onClose={() => setShowLog(false)} />}
-    </div>
+        {showLog && <LogPanel state={state} onClose={() => setShowLog(false)} />}
+        {showEndConfirm && (
+          <EndGameConfirmModal
+            onConfirm={props.onEndGame}
+            onCancel={() => setShowEndConfirm(false)}
+          />
+        )}
+      </div>
+    </HoverPreviewProvider>
   );
 }
 
@@ -64,10 +80,12 @@ function TopBar({
   state,
   onShowRules,
   onToggleLog,
+  onRequestEndGame,
 }: {
   state: GameState;
   onShowRules: () => void;
   onToggleLog: () => void;
+  onRequestEndGame: () => void;
 }) {
   return (
     <div className="sticky top-0 z-20 bg-ink/90 backdrop-blur border-b border-white/10 px-4 py-2 flex items-center justify-between">
@@ -87,6 +105,40 @@ function TopBar({
         <button onClick={onShowRules} className="p-2 rounded-md hover:bg-white/10 text-white/70">
           <BookOpen size={18} />
         </button>
+        <button
+          onClick={onRequestEndGame}
+          className="p-2 rounded-md hover:bg-accent/20 text-white/70 hover:text-accent"
+          title="Termina Partita"
+        >
+          <LogOut size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function EndGameConfirmModal({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+      <div className="bg-panel border border-white/10 rounded-xl max-w-sm w-full p-6 text-center">
+        <h3 className="font-display text-2xl text-white mb-2">Terminare la partita?</h3>
+        <p className="text-white/60 text-sm mb-6">
+          La partita in corso andrà persa e tornerai alla schermata principale.
+        </p>
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={onCancel}
+            className="px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold"
+          >
+            Annulla
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-5 py-2.5 rounded-lg bg-accent hover:bg-accent/80 text-white text-sm font-bold"
+          >
+            Termina Partita
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -186,6 +238,7 @@ function MainBoard(props: Props) {
     if (!selected || selected.kind !== 'news') return false;
     const theory = findTheory(state, theoryUid);
     if (!theory || theory.closed) return false;
+    if (!theory.slotA.filled || !theory.slotB.filled) return false;
     if (theory.attachedNews.length >= maxAttachableNews(theory)) return false;
     return canAttachNewsToTheory(selected, theory);
   };

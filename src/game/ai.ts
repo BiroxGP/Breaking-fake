@@ -65,6 +65,7 @@ function findOwnSlotForCatalyst(theories: TheoryInstance[], catalystType: string
 function findSpotForNews(theories: TheoryInstance[], news: NewsInstance) {
   for (const t of theories) {
     if (t.closed) continue;
+    if (!t.slotA.filled || !t.slotB.filled) continue;
     if (t.attachedNews.length >= maxAttachableNews(t)) continue;
     if (!canAttachNewsToTheory(news, t)) continue;
     return t;

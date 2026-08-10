@@ -30,8 +30,10 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
         </Section>
 
         <Section title="Regola d'Oro">
-          Un Catalizzatore già piazzato può sempre essere sostituito, MA non appena a una Teoria viene
-          collegata la prima Notizia, i suoi Catalizzatori si bloccano per sempre.
+          Finché una Teoria non ha entrambi gli slot Catalizzatore occupati, ogni Catalizzatore già piazzato
+          (tuo o di un avversario) può sempre essere sostituito con un'Azione. Non appena il secondo slot
+          viene riempito, la Teoria si blocca: i Catalizzatori non sono più sostituibili e solo da quel
+          momento è possibile collegarle Notizie.
         </Section>
 
         <Section title="Finestra di Reazione">

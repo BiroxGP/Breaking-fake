@@ -191,6 +191,7 @@ export default function App() {
             return res.state;
           })
         }
+        onEndGame={restart}
       />
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}
     </>

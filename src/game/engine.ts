@@ -137,6 +137,7 @@ export function placeCatalyst(
   actingPlayer.hand.splice(cardIdx, 1);
   slot.filled = card;
   if (replaced) state.catalystDiscard.push(replaced);
+  if (theory.slotA.filled && theory.slotB.filled) theory.locked = true;
   state.actionsLeft -= 1;
 
   addLog(
@@ -171,6 +172,9 @@ export function attachNews(
 
   const theory = findTheory(state, theoryUid);
   if (!theory) return { state: prev, error: 'Teoria non trovata.' };
+  if (!theory.slotA.filled || !theory.slotB.filled) {
+    return { state: prev, error: 'Servono entrambi i Catalizzatori piazzati prima di collegare Notizie.' };
+  }
   if (theory.attachedNews.length >= maxAttachableNews(theory)) {
     return { state: prev, error: 'Questa Teoria ha già il numero massimo di Notizie collegate.' };
   }
@@ -185,7 +189,6 @@ export function attachNews(
   actingPlayer.hand.splice(cardIdx, 1);
   card.attackerId = actingPlayerId;
   theory.attachedNews.push(card);
-  theory.locked = true;
   state.actionsLeft -= 1;
 
   addLog(

@@ -2,6 +2,7 @@ import { CircleDot, Flame, Newspaper, Zap } from 'lucide-react';
 import type { CatalystInstance, NewsInstance, ResonanceInstance, TheoryInstance } from '../types';
 import { LEVEL_LABELS, LEVEL_POINTS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
+import { Magnify } from './HoverPreview';
 
 function Stars({ n }: { n: number }) {
   return (
@@ -31,7 +32,7 @@ export function CatalystCardView({
   selected?: boolean;
   small?: boolean;
 }) {
-  return (
+  const cardEl = (
     <button
       type="button"
       onClick={onClick}
@@ -54,6 +55,11 @@ export function CatalystCardView({
       </div>
     </button>
   );
+  return (
+    <Magnify preview={<CatalystCardView card={card} />} className="shrink-0">
+      {cardEl}
+    </Magnify>
+  );
 }
 
 export function NewsCardView({
@@ -72,7 +78,7 @@ export function NewsCardView({
 }) {
   const principale = theory ? isEffectivelyPrincipale(card, theory) : false;
   const points = theory ? newsScoreContribution(card, theory) : LEVEL_POINTS[card.level];
-  return (
+  const cardEl = (
     <button
       type="button"
       onClick={onClick}
@@ -108,6 +114,11 @@ export function NewsCardView({
       </div>
     </button>
   );
+  return (
+    <Magnify preview={<NewsCardView card={card} theory={theory} />} className="shrink-0">
+      {cardEl}
+    </Magnify>
+  );
 }
 
 export function ResonanceCardView({
@@ -119,7 +130,7 @@ export function ResonanceCardView({
   onClick?: () => void;
   selected?: boolean;
 }) {
-  return (
+  const cardEl = (
     <button
       type="button"
       onClick={onClick}
@@ -143,6 +154,11 @@ export function ResonanceCardView({
         <div className="text-[10px] text-white/60 leading-snug">{card.def.description}</div>
       </div>
     </button>
+  );
+  return (
+    <Magnify preview={<ResonanceCardView card={card} />} className="shrink-0">
+      {cardEl}
+    </Magnify>
   );
 }
 
@@ -187,7 +203,7 @@ export function TheoryCardView({
   isNewsTargetable?: (news: NewsInstance) => boolean;
 }) {
   const closeable = !theory.closed && canCloseTheory(theory);
-  return (
+  const cardEl = (
     <div
       className={`rounded-xl border ${
         theory.closed ? 'border-gold/60' : 'border-white/10'
@@ -225,10 +241,10 @@ export function TheoryCardView({
               } ${onSlotClick ? 'cursor-pointer' : ''}`}
             >
               {slot.filled ? (
-                <>
+                <Magnify preview={<CatalystCardView card={slot.filled} />}>
                   <span className="text-white font-semibold">{slot.filled.def.name}</span>
                   <span className="text-gold">{slot.filled.def.points}pt</span>
-                </>
+                </Magnify>
               ) : (
                 <span className="text-white/40">{TYPE_ICON[slot.required]} {slot.required}</span>
               )}
@@ -267,7 +283,9 @@ export function TheoryCardView({
               }`}
               title={`${n.def.name} — ${LEVEL_LABELS[n.level]}`}
             >
-              {n.def.name.length > 14 ? `${n.def.name.slice(0, 14)}…` : n.def.name} ({newsScoreContribution(n, theory)})
+              <Magnify preview={<NewsCardView card={n} theory={theory} />}>
+                {n.def.name.length > 14 ? `${n.def.name.slice(0, 14)}…` : n.def.name} ({newsScoreContribution(n, theory)})
+              </Magnify>
             </button>
           );
         })}
@@ -293,5 +311,10 @@ export function TheoryCardView({
         </div>
       )}
     </div>
+  );
+  return (
+    <Magnify preview={<TheoryCardView theory={theory} isOwn={isOwn} />} className="shrink-0">
+      {cardEl}
+    </Magnify>
   );
 }
