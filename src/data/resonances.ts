@@ -1,0 +1,118 @@
+import type { ResonanceDef } from '../types';
+
+export const RESONANCES: ResonanceDef[] = [
+  {
+    id: 'res-fuori-contesto',
+    name: 'Fuori Contesto',
+    effectId: 'fuori_contesto',
+    type: 'Reazione',
+    description:
+      'Se giocata su una notizia di Categoria Secondaria: la notizia vale 0 punti. Se giocata su una notizia di Categoria Principale: riduci la Diffusione di -1 (Min: Sconosciuta).',
+    flavor:
+      'Un dettaglio reale strappato al suo ambiente naturale. Senza le giuste coordinate, anche la verità diventa uno strumento di confusione.',
+    image: '/cards/risonanza/fuori-contesto.png',
+  },
+  {
+    id: 'res-notizia-verificata',
+    name: 'Notizia Verificata',
+    effectId: 'notizia_verificata',
+    type: 'Reazione',
+    description:
+      'La Diffusione di questa notizia non può più essere ridotta da altri effetti e nessun\'altra Risonanza potrà più essere giocata su di essa. Se la Diffusione attuale è Sconosciuta o Emergente, aumentala di +1 (Max: Popolare).',
+    flavor: 'Un frammento di realtà inoppugnabile. Dati certificati che resistono a qualsiasi tentativo di manipolazione o smentita.',
+    image: '/cards/risonanza/notizia-verificata.png',
+  },
+  {
+    id: 'res-leak-controllato',
+    name: 'Leak Controllato',
+    effectId: 'leak_controllato',
+    type: 'Reazione',
+    description: 'Imposta immediatamente il livello di Diffusione a Popolare (indipendentemente dal livello attuale).',
+    flavor: 'Una fuga di notizie orchestrata dall\'alto. Sembra una falla nel sistema, ma è solo un nuovo canale per dirigere la narrazione.',
+    image: '/cards/risonanza/leak-controllato.png',
+  },
+  {
+    id: 'res-insabbiamento',
+    name: 'Insabbiamento',
+    effectId: 'insabbiamento',
+    type: 'Immediata',
+    description:
+      'Riduci la Diffusione della notizia di 2. Se il livello risultante scende a Sconosciuta (o inferiore), scarta la notizia e rimuovila dal gioco.',
+    flavor: 'La notizia viene fatta sparire: prove rimosse, testimoni silenziati e server cancellati per far tornare il buio sulla vicenda.',
+    image: '/cards/risonanza/insabbiamento.png',
+  },
+  {
+    id: 'res-anello-mancante',
+    name: 'Anello Mancante',
+    effectId: 'anello_mancante',
+    type: 'Immediata',
+    description:
+      'Questa notizia viene considerata di Categoria Principale (invece che Secondaria) ai fini del calcolo dei Punti e per soddisfare i requisiti di chiusura della Teoria.',
+    flavor: 'Una connessione audace che sfida la logica immediata. Rende credibile una pista che altrimenti verrebbe considerata marginale.',
+    image: '/cards/risonanza/anello-mancante.png',
+  },
+  {
+    id: 'res-clickbait',
+    name: 'Clickbait',
+    effectId: 'clickbait',
+    type: 'Reazione',
+    description: 'Aumenta la Diffusione di +2 (Max: Virale). Questa notizia non può mai valere più di 2 Punti, indipendentemente da altri bonus.',
+    flavor: 'Un titolo urlato per nascondere il vuoto. Genera un forte impatto nell\'immediato, ma si dissolve non appena viene analizzato a fondo.',
+    image: '/cards/risonanza/clickbait.png',
+  },
+  {
+    id: 'res-trappola-governativa',
+    name: 'Trappola Governativa',
+    effectId: 'trappola_governativa',
+    type: 'Reazione',
+    description: 'Aumenta la Diffusione di +1 (Max: Virale).',
+    flavor: 'Un\'esca digitale confezionata alla perfezione. Chi la diffonde si espone, permettendo al sistema di tracciare la sua posizione.',
+    image: '/cards/risonanza/trappola-governativa.png',
+  },
+  {
+    id: 'res-smentita-ufficiale',
+    name: 'Smentita Ufficiale',
+    effectId: 'smentita_ufficiale',
+    type: 'Reazione',
+    description: 'Riduci la Diffusione di -1 (Min: Sconosciuta).',
+    flavor: 'La voce dell\'autorità interviene per chiudere la questione. Un timbro "FALSO" istituzionale che rassicura la massa e isola chi indaga.',
+    image: '/cards/risonanza/smentita-ufficiale.png',
+  },
+  {
+    id: 'res-mezza-verita',
+    name: 'Mezza Verità',
+    effectId: 'mezza_verita',
+    type: 'Reazione',
+    description: 'Il valore in Punti della notizia bersaglio viene dimezzato (arrotondato per difetto).',
+    flavor: 'Fatti reali distorti da omissioni strategiche. La verità viene usata come arma per guidare l\'opinione pubblica verso conclusioni errate.',
+    image: '/cards/risonanza/mezza-verita.png',
+  },
+  {
+    id: 'res-sotto-la-superficie',
+    name: 'Sotto la Superficie',
+    effectId: 'sotto_la_superficie',
+    type: 'Immediata',
+    description:
+      'Per poter chiudere la Teoria in cui è presente questa notizia, è obbligatorio collegare 1 Notizia aggiuntiva (Principale o Secondaria). Questa carta extra non conta ai fini del limite massimo di Notizie della Teoria. Applicabile una sola volta per Teoria.',
+    flavor: 'Ciò che appare banale nasconde abissi di complessità. È solo la punta dell\'iceberg di una macchinazione ben più vasta.',
+    image: '/cards/risonanza/sotto-la-superficie.png',
+  },
+  {
+    id: 'res-vaso-di-pandora',
+    name: 'Vaso di Pandora',
+    effectId: 'vaso_di_pandora',
+    type: 'Reazione',
+    description: 'Aumenta la Diffusione di +3 (Max: Top Secret).',
+    flavor: 'Verità che non dovevano emergere. Una volta rivelate, scardinano lo status quo e rendono impossibile tornare indietro.',
+    image: '/cards/risonanza/vaso-di-pandora.png',
+  },
+  {
+    id: 'res-fake-news',
+    name: 'Fake News',
+    effectId: 'fake_news',
+    type: 'Reazione',
+    description: 'Imposta la Diffusione della notizia bersaglio a Sconosciuta. Se era già Sconosciuta, il valore in Punti della notizia diventa 0.',
+    flavor: 'Una menzogna costruita ad arte per sembrare autentica. Inquina le acque e mina la credibilità di ogni altra prova collegata.',
+    image: '/cards/risonanza/fake-news.png',
+  },
+];

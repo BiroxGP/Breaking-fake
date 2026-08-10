@@ -1,0 +1,187 @@
+export type CatalystType = 'Artefice' | 'Luogo' | 'Mezzo' | 'Prova' | 'Scopo';
+
+export type TheoryTopic =
+  | 'Alieno'
+  | 'Politica'
+  | 'Scienza'
+  | 'Misteri e Leggende'
+  | 'Teorie Terrestri'
+  | 'Occulto'
+  | 'Tecnologia';
+
+export type NewsCategory = 'Principale' | 'Secondaria';
+
+export type DiffusionLevel = 'Sconosciuta' | 'Emergente' | 'Popolare' | 'Virale' | 'TopSecret';
+
+export interface TheoryDef {
+  id: string;
+  name: string;
+  topic: TheoryTopic;
+  stars: 1 | 2 | 3;
+  basePV: number;
+  flavor: string;
+  slotA: CatalystType;
+  slotB: CatalystType;
+}
+
+export interface CatalystDef {
+  id: string;
+  name: string;
+  type: CatalystType;
+  stars: 1 | 2 | 3;
+  points: number;
+  flavor: string;
+}
+
+export interface NewsDef {
+  id: string;
+  name: string;
+  category: NewsCategory;
+  startLevel: DiffusionLevel;
+  flavor: string;
+}
+
+export type ResonanceEffectId =
+  | 'fuori_contesto'
+  | 'notizia_verificata'
+  | 'leak_controllato'
+  | 'insabbiamento'
+  | 'anello_mancante'
+  | 'clickbait'
+  | 'trappola_governativa'
+  | 'smentita_ufficiale'
+  | 'mezza_verita'
+  | 'sotto_la_superficie'
+  | 'vaso_di_pandora'
+  | 'fake_news';
+
+export type ResonanceType = 'Reazione' | 'Immediata';
+
+export interface ResonanceDef {
+  id: string;
+  name: string;
+  effectId: ResonanceEffectId;
+  type: ResonanceType;
+  description: string;
+  flavor: string;
+  image: string;
+}
+
+export interface CatalystInstance {
+  uid: string;
+  kind: 'catalyst';
+  def: CatalystDef;
+}
+
+export interface NewsInstance {
+  uid: string;
+  kind: 'news';
+  def: NewsDef;
+  level: DiffusionLevel;
+  attackerId: string;
+  categoryOverridePrincipale: boolean;
+  pointsOverrideZero: boolean;
+  pointsHalved: boolean;
+  pointsCapAt2: boolean;
+  lockedByVerification: boolean;
+}
+
+export interface ResonanceInstance {
+  uid: string;
+  kind: 'resonance';
+  def: ResonanceDef;
+}
+
+export type HandCard = CatalystInstance | NewsInstance | ResonanceInstance;
+
+export interface TheorySlot {
+  required: CatalystType;
+  filled: CatalystInstance | null;
+}
+
+export interface TheoryInstance {
+  uid: string;
+  def: TheoryDef;
+  ownerId: string;
+  slotA: TheorySlot;
+  slotB: TheorySlot;
+  attachedNews: NewsInstance[];
+  locked: boolean;
+  closed: boolean;
+  closeOrder: number | null;
+  extraNewsRequired: number;
+}
+
+export interface Player {
+  id: string;
+  name: string;
+  isAI: boolean;
+  hand: HandCard[];
+  theories: TheoryInstance[];
+  discardedTheoryChoices?: TheoryDef[];
+}
+
+export interface LogEntry {
+  id: string;
+  text: string;
+  turn: number;
+}
+
+export type GamePhase =
+  | 'setup'
+  | 'draft'
+  | 'draw'
+  | 'actions'
+  | 'reaction'
+  | 'gameover';
+
+export interface PendingReaction {
+  newsUid: string;
+  theoryUid: string;
+  theoryOwnerId: string;
+  placedById: string;
+  queue: string[];
+  currentIndex: number;
+}
+
+export interface PendingRecycle {
+  playerId: string;
+  deckType: 'catalyst' | 'news';
+  options: (CatalystInstance | NewsInstance)[];
+}
+
+export interface GameState {
+  players: Player[];
+  currentPlayerIndex: number;
+  actionsLeft: number;
+  phase: GamePhase;
+  catalystDeck: CatalystInstance[];
+  catalystDiscard: CatalystInstance[];
+  newsDeck: NewsInstance[];
+  newsDiscard: NewsInstance[];
+  resonanceDeck: ResonanceInstance[];
+  resonanceDiscard: ResonanceInstance[];
+  theoryDeck: TheoryDef[];
+  theoryDiscard: TheoryDef[];
+  pendingReaction: PendingReaction | null;
+  pendingRecycle: PendingRecycle | null;
+  draft: { choices: Record<string, TheoryDef[]>; submitted: Record<string, boolean> } | null;
+  turnNumber: number;
+  triggerPlayerId: string | null;
+  finalTurnsRemaining: number;
+  log: LogEntry[];
+  winnerId: string | null;
+  scores: Record<string, ScoreBreakdown> | null;
+}
+
+export interface ScoreBreakdown {
+  playerId: string;
+  theoryValue: number;
+  catalystValue: number;
+  newsValue: number;
+  coerenzaTestuale: number;
+  monopolio: number;
+  scoopDelSecolo: number;
+  clickbaiterSeriale: number;
+  total: number;
+}

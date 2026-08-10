@@ -1,0 +1,8 @@
+node_modules
+dist
+.env.local
+*.tsbuildinfo
+
+# Raw source assets (manual PDF + original card art) - not needed for the deployed app
+/Immagini
+/Manuale
