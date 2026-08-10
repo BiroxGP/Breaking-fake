@@ -37,6 +37,7 @@ export interface CatalystDef {
   stars: 1 | 2 | 3;
   points: number;
   flavor: string;
+  image: string;
 }
 
 export interface NewsDef {

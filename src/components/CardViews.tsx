@@ -46,6 +46,7 @@ export function CatalystCardView({
         </span>
         <span className="text-[10px] font-bold text-gold">{card.def.points}pt</span>
       </div>
+      {!small && <img src={card.def.image} alt={card.def.name} className="w-full aspect-square object-cover" />}
       <div className="p-2 flex-1 flex flex-col gap-1">
         <Stars n={card.def.stars} />
         <div className="font-display text-base leading-tight text-white">{card.def.name}</div>
