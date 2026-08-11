@@ -85,6 +85,8 @@ export function createGame(configs: NewPlayerConfig[]): GameState {
     players,
     currentPlayerIndex: 0,
     actionsLeft: 2,
+    selfActionUsed: false,
+    opponentActionUsed: false,
     phase: 'draft',
     catalystDeck,
     catalystDiscard: [],

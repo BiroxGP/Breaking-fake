@@ -97,6 +97,8 @@ export function startDrawPhase(prev: GameState, catalystCount: number, newsCount
   );
   state.phase = 'actions';
   state.actionsLeft = 2;
+  state.selfActionUsed = false;
+  state.opponentActionUsed = false;
   return state;
 }
 
@@ -133,12 +135,21 @@ export function placeCatalyst(
   }
 
   const isOpponent = theory.ownerId !== actingPlayerId;
+  if (isOpponent && state.opponentActionUsed) {
+    return { state: prev, error: 'Hai già giocato la tua azione su un avversario questo turno.' };
+  }
+  if (!isOpponent && state.selfActionUsed) {
+    return { state: prev, error: 'Hai già giocato la tua azione su te stesso questo turno.' };
+  }
+
   const replaced = slot.filled;
   actingPlayer.hand.splice(cardIdx, 1);
   slot.filled = card;
   if (replaced) state.catalystDiscard.push(replaced);
   if (theory.slotA.filled && theory.slotB.filled) theory.locked = true;
   state.actionsLeft -= 1;
+  if (isOpponent) state.opponentActionUsed = true;
+  else state.selfActionUsed = true;
 
   addLog(
     state,
@@ -186,10 +197,19 @@ export function attachNews(
   }
 
   const isOpponent = theory.ownerId !== actingPlayerId;
+  if (isOpponent && state.opponentActionUsed) {
+    return { state: prev, error: 'Hai già giocato la tua azione su un avversario questo turno.' };
+  }
+  if (!isOpponent && state.selfActionUsed) {
+    return { state: prev, error: 'Hai già giocato la tua azione su te stesso questo turno.' };
+  }
+
   actingPlayer.hand.splice(cardIdx, 1);
   card.attackerId = actingPlayerId;
   theory.attachedNews.push(card);
   state.actionsLeft -= 1;
+  if (isOpponent) state.opponentActionUsed = true;
+  else state.selfActionUsed = true;
 
   addLog(
     state,

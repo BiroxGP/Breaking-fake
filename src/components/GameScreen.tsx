@@ -234,6 +234,9 @@ function MainBoard(props: Props) {
     if (selected.kind === 'catalyst') {
       if (slot.required !== selected.def.type) return false;
       if (slot.filled && theory.locked) return false;
+      const isOpponent = theory.ownerId !== cp.id;
+      if (isOpponent && state.opponentActionUsed) return false;
+      if (!isOpponent && state.selfActionUsed) return false;
       return true;
     }
     if (isInsabbiamento) {
@@ -248,6 +251,9 @@ function MainBoard(props: Props) {
     if (!theory || theory.closed) return false;
     if (!theory.slotA.filled || !theory.slotB.filled) return false;
     if (theory.attachedNews.length >= maxAttachableNews(theory)) return false;
+    const isOpponent = theory.ownerId !== cp.id;
+    if (isOpponent && state.opponentActionUsed) return false;
+    if (!isOpponent && state.selfActionUsed) return false;
     return canAttachNewsToTheory(selected, theory);
   };
 
@@ -283,7 +289,9 @@ function MainBoard(props: Props) {
         <div className="text-white font-display text-2xl">{cp.name}</div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-white/50 flex items-center gap-1">
-            <Zap size={13} className="text-gold" /> Azioni: {state.actionsLeft}/2
+            <Zap size={13} className="text-gold" />
+            Su te stesso: {state.selfActionUsed ? 'usata' : 'disponibile'} · Su avversario:{' '}
+            {state.opponentActionUsed ? 'usata' : 'disponibile'}
           </span>
           <button
             onClick={props.onEndTurn}

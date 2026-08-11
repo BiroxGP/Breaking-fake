@@ -22,9 +22,9 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
         <Section title="Turno">
           <ol className="list-decimal list-inside space-y-1">
             <li>Pesca: scegli come dividere 2 carte tra Catalizzatori e Notizie, più 1 Risonanza obbligatoria.</li>
-            <li>Fino a 2 Azioni: piazza un Catalizzatore in uno slot libero/sostituibile della tua Teoria, oppure
-              collega una Notizia. Farlo su una Teoria avversaria attiva il Riciclo Tattico (peschi 3 carte,
-              ne tieni 1).</li>
+            <li>Fino a 2 Azioni, mai due dello stesso tipo: al massimo 1 Azione su una tua Teoria (piazza un
+              Catalizzatore o collega una Notizia) e al massimo 1 Azione su una Teoria avversaria, che attiva
+              anche il Riciclo Tattico (peschi 3 carte, ne tieni 1).</li>
             <li>Chiudere Teorie è gratis e puoi farlo in ogni momento del tuo turno, anche più volte.</li>
           </ol>
         </Section>

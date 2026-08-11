@@ -168,6 +168,8 @@ export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
   actionsLeft: number;
+  selfActionUsed: boolean;
+  opponentActionUsed: boolean;
   phase: GamePhase;
   catalystDeck: CatalystInstance[];
   catalystDiscard: CatalystInstance[];
