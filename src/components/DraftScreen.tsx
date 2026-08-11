@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { GameState, TheoryDef } from '../types';
+import type { CatalystType, GameState, TheoryDef } from '../types';
 import { Hotseat } from './Hotseat';
 
 function Stars({ n }: { n: number }) {
@@ -10,6 +10,14 @@ function Stars({ n }: { n: number }) {
     </span>
   );
 }
+
+const TYPE_ICON: Record<CatalystType, string> = {
+  Artefice: '🛠️',
+  Luogo: '📍',
+  Mezzo: '📡',
+  Prova: '🔍',
+  Scopo: '🎯',
+};
 
 function TheoryPickCard({ def, picked, onToggle }: { def: TheoryDef; picked: boolean; onToggle: () => void }) {
   return (
@@ -32,6 +40,69 @@ function TheoryPickCard({ def, picked, onToggle }: { def: TheoryDef; picked: boo
         <span className="text-gold font-bold">{def.basePV} PV</span>
       </div>
     </button>
+  );
+}
+
+function SelectionSummary({ picked }: { picked: TheoryDef[] }) {
+  const slots = [0, 1, 2];
+
+  const topicCounts = new Map<string, number>();
+  const typeCounts = new Map<CatalystType, number>();
+  let totalPV = 0;
+  for (const def of picked) {
+    topicCounts.set(def.topic, (topicCounts.get(def.topic) ?? 0) + 1);
+    typeCounts.set(def.slotA, (typeCounts.get(def.slotA) ?? 0) + 1);
+    typeCounts.set(def.slotB, (typeCounts.get(def.slotB) ?? 0) + 1);
+    totalPV += def.basePV;
+  }
+  const monopolioTopics = [...topicCounts.entries()].filter(([, n]) => n >= 2);
+
+  return (
+    <div className="mt-6 w-full max-w-3xl rounded-xl border border-white/10 bg-panel/80 p-4">
+      <div className="text-accent2 text-xs uppercase tracking-widest mb-2">La tua selezione</div>
+      <div className="grid grid-cols-3 gap-2">
+        {slots.map((i) => {
+          const def = picked[i];
+          return (
+            <div
+              key={i}
+              className={`rounded-lg border text-xs px-2 py-2 min-h-[64px] flex flex-col justify-center ${
+                def ? 'border-accent2/50 bg-accent2/10' : 'border-dashed border-white/15 text-white/30 italic text-center'
+              }`}
+            >
+              {def ? (
+                <>
+                  <div className="text-white font-semibold leading-tight">{def.name}</div>
+                  <div className="text-white/50 mt-0.5">{def.topic}</div>
+                </>
+              ) : (
+                <span>Teoria mancante</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {picked.length > 0 && (
+        <div className="flex flex-wrap items-center gap-4 mt-3 text-[11px] text-white/60">
+          <span>
+            Catalizzatori richiesti:{' '}
+            {[...typeCounts.entries()].map(([type, n]) => (
+              <span key={type} className="inline-flex items-center gap-0.5 mr-2">
+                {TYPE_ICON[type]} {type} ×{n}
+              </span>
+            ))}
+          </span>
+          <span className="text-gold font-bold">{totalPV} PV base totali</span>
+          {monopolioTopics.length > 0 && (
+            <span className="text-accent flex items-center gap-1">
+              🎯 Monopolio possibile:{' '}
+              {monopolioTopics.map(([topic, n]) => `${topic} ×${n}`).join(', ')}
+            </span>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -74,6 +145,7 @@ function DraftPicker({
   onSubmit: (ids: string[]) => void;
 }) {
   const [picked, setPicked] = useState<string[]>([]);
+  const pickedDefs = picked.map((id) => choices.find((c) => c.id === id)!).filter(Boolean);
 
   const toggle = (id: string) => {
     setPicked((prev) => {
@@ -90,7 +162,12 @@ function DraftPicker({
       </h2>
       <p className="text-white/50 text-sm mt-1">{picked.length}/3 selezionate</p>
 
-      <div className="mt-6 grid sm:grid-cols-2 gap-3 max-w-3xl w-full">
+      <SelectionSummary picked={pickedDefs} />
+
+      <div className="text-white/40 text-xs uppercase tracking-widest mt-6 mb-1 self-start max-w-3xl w-full">
+        Le 5 Teorie tra cui scegliere
+      </div>
+      <div className="grid sm:grid-cols-2 gap-3 max-w-3xl w-full">
         {choices.map((def) => (
           <TheoryPickCard key={def.id} def={def} picked={picked.includes(def.id)} onToggle={() => toggle(def.id)} />
         ))}
