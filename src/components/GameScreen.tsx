@@ -7,6 +7,7 @@ import { CatalystCardView, NewsCardView, ResonanceCardView, TheoryCardView } fro
 import { findTheory } from '../game/engine';
 import { maxAttachableNews } from '../game/rules';
 import { canAttachNewsToTheory } from '../game/resonanceEffects';
+import { findApplicableTheories } from '../game/targeting';
 
 type ImmediateTarget = { theoryUid: string; newsUid: string } | { theoryUid: string; slotKey: 'slotA' | 'slotB' };
 
@@ -208,7 +209,14 @@ function MainBoard(props: Props) {
   const [selected, setSelected] = useState<HandCard | null>(null);
 
   if (state.pendingRecycle && state.pendingRecycle.playerId === cp.id) {
-    return <RecycleModal options={state.pendingRecycle.options} onPick={props.onResolveRecycle} />;
+    return (
+      <RecycleModal
+        options={state.pendingRecycle.options}
+        state={state}
+        viewerPlayerId={cp.id}
+        onPick={props.onResolveRecycle}
+      />
+    );
   }
 
   if (state.phase === 'draw') {
@@ -367,9 +375,13 @@ function MainBoard(props: Props) {
 
 function RecycleModal({
   options,
+  state,
+  viewerPlayerId,
   onPick,
 }: {
   options: (import('../types').CatalystInstance | import('../types').NewsInstance)[];
+  state: GameState;
+  viewerPlayerId: string;
   onPick: (uid: string) => void;
 }) {
   return (
@@ -378,14 +390,33 @@ function RecycleModal({
       <p className="text-white/50 text-sm text-center max-w-sm">
         Hai sabotato un avversario: scegli 1 di queste 3 carte da tenere, le altre finiscono nello scarto.
       </p>
-      <div className="flex gap-3 flex-wrap justify-center">
-        {options.map((o) =>
-          o.kind === 'catalyst' ? (
-            <CatalystCardView key={o.uid} card={o} onClick={() => onPick(o.uid)} />
-          ) : (
-            <NewsCardView key={o.uid} card={o} onClick={() => onPick(o.uid)} />
-          ),
-        )}
+      <div className="flex gap-4 flex-wrap justify-center items-start max-w-4xl">
+        {options.map((o) => {
+          const matches = findApplicableTheories(o, state, viewerPlayerId);
+          return (
+            <div key={o.uid} className="flex flex-col items-center gap-2 w-44">
+              {o.kind === 'catalyst' ? (
+                <CatalystCardView card={o} onClick={() => onPick(o.uid)} />
+              ) : (
+                <NewsCardView card={o} onClick={() => onPick(o.uid)} />
+              )}
+              <div className="w-full rounded-lg border border-white/10 bg-panel2/60 px-2 py-1.5 text-[10px] leading-snug">
+                {matches.length === 0 ? (
+                  <span className="italic text-white/30">Nessuna Teoria compatibile ora.</span>
+                ) : (
+                  <ul className="flex flex-col gap-1">
+                    {matches.map((m, i) => (
+                      <li key={i} className={m.isOwn ? 'text-accent2' : 'text-accent'}>
+                        <strong>{m.isOwn ? 'Tu' : m.ownerName}</strong>: {m.theoryName}
+                        <span className="text-white/40"> — {m.detail}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
