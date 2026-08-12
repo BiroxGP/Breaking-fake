@@ -1,4 +1,5 @@
 import { Newspaper, Radio, Sparkles, Users, Zap } from 'lucide-react';
+import { FeedbackWidget } from './FeedbackWidget';
 
 export function Landing({ onStart, onRules }: { onStart: () => void; onRules: () => void }) {
   return (
@@ -50,7 +51,9 @@ export function Landing({ onStart, onRules }: { onStart: () => void; onRules: ()
           </Feature>
         </div>
 
-        <div className="mt-16 border-t border-white/10 pt-8 text-white/40 text-xs flex items-center justify-center gap-2">
+        <FeedbackWidget className="mt-16 text-left" />
+
+        <div className="mt-8 border-t border-white/10 pt-8 text-white/40 text-xs flex items-center justify-center gap-2">
           <Newspaper size={14} /> Demo non ufficiale a scopo dimostrativo — le illustrazioni definitive
           delle carte arriveranno nella versione completa.
         </div>

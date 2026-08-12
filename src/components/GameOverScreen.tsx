@@ -1,5 +1,6 @@
 import { Crown, RotateCcw } from 'lucide-react';
 import type { GameState } from '../types';
+import { FeedbackWidget } from './FeedbackWidget';
 
 export function GameOverScreen({ state, onRestart }: { state: GameState; onRestart: () => void }) {
   const scores = state.scores!;
@@ -39,9 +40,11 @@ export function GameOverScreen({ state, onRestart }: { state: GameState; onResta
         ))}
       </div>
 
+      <FeedbackWidget className="mt-10 w-full max-w-2xl" />
+
       <button
         onClick={onRestart}
-        className="mt-10 px-8 py-4 rounded-xl bg-accent text-white font-display text-2xl tracking-wide hover:bg-accent/80 shadow-glow flex items-center gap-2"
+        className="mt-8 px-8 py-4 rounded-xl bg-accent text-white font-display text-2xl tracking-wide hover:bg-accent/80 shadow-glow flex items-center gap-2"
       >
         <RotateCcw size={20} /> Gioca Ancora
       </button>
