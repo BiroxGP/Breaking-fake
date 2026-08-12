@@ -37,7 +37,7 @@ export function TheoryPrintout({
             <img
               src={theory.def.image}
               alt={theory.def.name}
-              className="float-left w-28 sm:w-32 aspect-[4/3] object-cover rounded-sm border border-ink/40 shadow grayscale contrast-125 mr-3 mb-1"
+              className="float-left w-32 sm:w-40 aspect-[16/9] object-cover rounded-sm border border-ink/40 shadow grayscale contrast-125 mr-3 mb-1"
             />
             <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] uppercase">{theory.def.name}</h2>
             <TheoryFlavor
@@ -67,6 +67,9 @@ export function TheoryPrintout({
                         <div className="text-[9px] text-ink/60 mt-0.5">
                           {isEffectivelyPrincipale(n, theory) ? 'Principale' : 'Secondaria'} · {LEVEL_LABELS[n.level]} ·{' '}
                           {newsScoreContribution(n, theory)} PV
+                        </div>
+                        <div className="font-serif italic text-[9px] text-ink/60 leading-snug mt-1 line-clamp-3">
+                          {n.def.flavor}
                         </div>
                       </div>
                     </div>
