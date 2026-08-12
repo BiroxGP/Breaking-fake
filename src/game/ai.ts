@@ -1,4 +1,4 @@
-import type { GameState, ResonanceEffectId, TheoryDef, TheoryInstance } from '../types';
+import type { GameState, TheoryDef, TheoryInstance } from '../types';
 import {
   attachNews,
   closeTheory,
@@ -13,25 +13,8 @@ import {
   submitDraftPick,
 } from './engine';
 import { canCloseTheory, maxAttachableNews } from './rules';
-import { LEVEL_POINTS, canAttachNewsToTheory } from './resonanceEffects';
+import { LEVEL_POINTS, NEGATIVE_EFFECTS, POSITIVE_EFFECTS, canAttachNewsToTheory } from './resonanceEffects';
 import type { NewsInstance } from '../types';
-
-const NEGATIVE_EFFECTS: ResonanceEffectId[] = [
-  'fuori_contesto',
-  'insabbiamento',
-  'smentita_ufficiale',
-  'mezza_verita',
-  'fake_news',
-  'sotto_la_superficie',
-];
-const POSITIVE_EFFECTS: ResonanceEffectId[] = [
-  'notizia_verificata',
-  'leak_controllato',
-  'clickbait',
-  'trappola_governativa',
-  'vaso_di_pandora',
-  'anello_mancante',
-];
 
 export function aiPickDraft(defs: TheoryDef[]): string[] {
   const sorted = [...defs].sort((a, b) => a.stars - b.stars || Math.random() - 0.5);

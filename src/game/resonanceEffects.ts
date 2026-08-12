@@ -18,6 +18,28 @@ export const LEVEL_LABELS: Record<DiffusionLevel, string> = {
   TopSecret: 'Top Secret',
 };
 
+/** Effects that help the Teoria's owner (raise Diffusione/punti, or protect the Notizia) — worth
+ * playing on your own Teoria. */
+export const POSITIVE_EFFECTS: ResonanceEffectId[] = [
+  'notizia_verificata',
+  'leak_controllato',
+  'clickbait',
+  'trappola_governativa',
+  'vaso_di_pandora',
+  'anello_mancante',
+];
+
+/** Effects that hurt the Teoria's owner (lower Diffusione/punti, or raise its closing
+ * requirements) — worth playing on an opponent's Teoria. */
+export const NEGATIVE_EFFECTS: ResonanceEffectId[] = [
+  'fuori_contesto',
+  'insabbiamento',
+  'smentita_ufficiale',
+  'mezza_verita',
+  'sotto_la_superficie',
+  'fake_news',
+];
+
 function levelIndex(level: DiffusionLevel): number {
   return LEVEL_ORDER.indexOf(level);
 }

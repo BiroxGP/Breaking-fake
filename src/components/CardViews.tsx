@@ -1,6 +1,13 @@
 import { CircleDot, Flame, Newspaper, Zap } from 'lucide-react';
 import type { CatalystInstance, NewsInstance, ResonanceInstance, TheoryInstance } from '../types';
-import { LEVEL_LABELS, LEVEL_POINTS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
+import {
+  LEVEL_LABELS,
+  LEVEL_POINTS,
+  NEGATIVE_EFFECTS,
+  POSITIVE_EFFECTS,
+  isEffectivelyPrincipale,
+  newsScoreContribution,
+} from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
 import { Magnify } from './HoverPreview';
 
@@ -204,6 +211,16 @@ export function ResonanceCardView({
         >
           <Zap size={9} /> {card.def.type}
         </span>
+        {POSITIVE_EFFECTS.includes(card.def.effectId) && (
+          <span className="absolute top-1 left-1 text-[8px] font-bold px-1.5 py-0.5 rounded bg-green-600 text-white" title="Rafforza la Notizia: giocala su una Teoria che vuoi aiutare">
+            ▲ RAFFORZA
+          </span>
+        )}
+        {NEGATIVE_EFFECTS.includes(card.def.effectId) && (
+          <span className="absolute top-1 left-1 text-[8px] font-bold px-1.5 py-0.5 rounded bg-accent text-white" title="Indebolisce la Notizia: giocala su una Teoria che vuoi danneggiare">
+            ▼ INDEBOLISCE
+          </span>
+        )}
       </div>
       <div className="p-2 flex-1 flex flex-col gap-1">
         <div className="font-display text-base leading-tight text-white">{card.def.name}</div>

@@ -562,15 +562,30 @@ function ReactionPanel({
   const theory = findTheory(state, pr.theoryUid);
   const news = theory?.attachedNews.find((n) => n.uid === pr.newsUid);
   const resonanceCards = reactor.hand.filter((c) => c.kind === 'resonance');
+  const owner = state.players.find((p) => p.id === pr.theoryOwnerId);
+  const placer = state.players.find((p) => p.id === pr.placedById);
+  const isOwnTheory = reactor.id === pr.theoryOwnerId;
 
   return (
     <div className="flex flex-col items-center gap-4 py-10 px-4">
       <h3 className="font-display text-3xl text-white text-center">Finestra di Reazione</h3>
       <p className="text-white/50 text-sm text-center max-w-md">
-        <strong className="text-white">{theory?.def.name}</strong> ha appena ricevuto la notizia{' '}
-        <strong className="text-white">{news?.def.name}</strong>. Tocca a{' '}
+        <strong className="text-accent2">{placer?.name}</strong> ha collegato la notizia{' '}
+        <strong className="text-white">{news?.def.name}</strong> a{' '}
+        <strong className="text-white">{theory?.def.name}</strong>, Teoria di{' '}
+        <strong className="text-white">{owner?.name}</strong>. Tocca a{' '}
         <strong className="text-accent2">{reactor.name}</strong>: gioca una Risonanza o passa.
       </p>
+
+      <div
+        className={`text-sm text-center max-w-md rounded-lg px-4 py-2 border ${
+          isOwnTheory ? 'border-green-600/50 bg-green-950/30 text-green-200' : 'border-accent/50 bg-accent/10 text-red-200'
+        }`}
+      >
+        {isOwnTheory
+          ? 'È la TUA Teoria: una Risonanza ▲ Rafforza la aiuta, una ▼ Indebolisce la danneggia.'
+          : `È la Teoria di ${owner?.name} (avversaria per te): una Risonanza ▼ Indebolisce la danneggia, una ▲ Rafforza la aiuta.`}
+      </div>
 
       {news && theory && (
         <div className="scale-110">
