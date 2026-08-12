@@ -175,6 +175,11 @@ export interface PendingDiscard {
   excess: number;
 }
 
+export interface PendingPrintout {
+  theoryUid: string;
+  ownerId: string;
+}
+
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
@@ -193,6 +198,7 @@ export interface GameState {
   pendingReaction: PendingReaction | null;
   pendingRecycle: PendingRecycle | null;
   pendingDiscard: PendingDiscard | null;
+  pendingPrintout: PendingPrintout | null;
   draft: { choices: Record<string, TheoryDef[]>; submitted: Record<string, boolean> } | null;
   turnNumber: number;
   triggerPlayerId: string | null;

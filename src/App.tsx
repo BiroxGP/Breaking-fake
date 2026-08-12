@@ -5,6 +5,7 @@ import {
   attachNews,
   closeTheory,
   currentPlayer,
+  dismissPrintout,
   endTurn,
   passReaction,
   placeCatalyst,
@@ -35,6 +36,10 @@ type Screen = 'landing' | 'setup' | 'game';
 
 function stepAi(state: GameState): GameState {
   if (state.phase === 'gameover') return state;
+
+  // Pause the AI while a "manda in stampa" printout is on screen, so it stays visible
+  // (and attributable to whoever closed the Teoria) instead of flashing by mid-turn.
+  if (state.pendingPrintout) return state;
 
   if (state.draft) {
     return runAiDraftPick(state);
@@ -225,6 +230,7 @@ export default function App() {
             return playImmediateResonance(s, playerId, cardUid, target);
           })
         }
+        onDismissPrintout={() => withState((s) => dismissPrintout(s))}
         onEndGame={restart}
       />
       {showRules && <RulesModal onClose={() => setShowRules(false)} />}

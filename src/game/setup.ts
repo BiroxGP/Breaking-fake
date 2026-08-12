@@ -99,6 +99,7 @@ export function createGame(configs: NewPlayerConfig[]): GameState {
     pendingReaction: null,
     pendingRecycle: null,
     pendingDiscard: null,
+    pendingPrintout: null,
     draft: null,
     turnNumber: 1,
     triggerPlayerId: null,

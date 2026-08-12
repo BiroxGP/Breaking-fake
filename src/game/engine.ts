@@ -398,6 +398,7 @@ export function closeTheory(prev: GameState, playerId: string, theoryUid: string
   const closedCountBefore = player.theories.filter((t) => t.closed).length;
   theory.closed = true;
   theory.closeOrder = closedCountBefore + 1;
+  state.pendingPrintout = { theoryUid: theory.uid, ownerId: player.id };
 
   addLog(state, `${player.name} manda in stampa "${theory.def.name}"! (Teoria chiusa n. ${theory.closeOrder})`);
 
@@ -412,6 +413,12 @@ export function closeTheory(prev: GameState, playerId: string, theoryUid: string
   }
 
   return { state };
+}
+
+export function dismissPrintout(prev: GameState): GameState {
+  const state = clone(prev);
+  state.pendingPrintout = null;
+  return state;
 }
 
 export function endTurn(prev: GameState): GameState {

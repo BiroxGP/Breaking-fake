@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BookOpen, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
 import type { GameState, HandCard } from '../types';
 import { Hotseat } from './Hotseat';
@@ -29,6 +29,7 @@ interface Props {
   onEndGame: () => void;
   actionError: string | null;
   onDismissError: () => void;
+  onDismissPrintout: () => void;
 }
 
 export function GameScreen(props: Props) {
@@ -39,6 +40,18 @@ export function GameScreen(props: Props) {
   const reactorId = state.pendingReaction?.queue[state.pendingReaction.currentIndex] ?? null;
   const reactor = reactorId ? state.players.find((p) => p.id === reactorId) : null;
   const cp = state.players[state.currentPlayerIndex];
+
+  const printoutOwner = state.pendingPrintout
+    ? state.players.find((p) => p.id === state.pendingPrintout!.ownerId)
+    : null;
+  const printoutTheory = state.pendingPrintout ? findTheory(state, state.pendingPrintout.theoryUid) : null;
+
+  useEffect(() => {
+    if (!state.pendingPrintout) return;
+    const timer = setTimeout(() => props.onDismissPrintout(), 7000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state.pendingPrintout?.theoryUid]);
 
   return (
     <HoverPreviewProvider>
@@ -116,6 +129,14 @@ export function GameScreen(props: Props) {
           />
         )}
         {props.actionError && <ErrorToast message={props.actionError} onDismiss={props.onDismissError} />}
+        {printoutTheory && printoutOwner && (
+          <TheoryPrintout
+            theory={printoutTheory}
+            allTheories={printoutOwner.theories}
+            ownerName={printoutOwner.name}
+            onClose={props.onDismissPrintout}
+          />
+        )}
       </div>
     </HoverPreviewProvider>
   );
@@ -285,13 +306,10 @@ function MainBoard(props: Props) {
   const { state } = props;
   const cp = state.players[state.currentPlayerIndex];
   const [selected, setSelected] = useState<HandCard | null>(null);
-  const [printoutUid, setPrintoutUid] = useState<string | null>(null);
 
   if (state.phase === 'draw') {
     return <DrawChooser onDraw={props.onDraw} />;
   }
-
-  const printoutTheory = printoutUid ? findTheory(state, printoutUid) : null;
 
   const others = state.players.filter((p) => p.id !== cp.id);
 
@@ -393,10 +411,7 @@ function MainBoard(props: Props) {
               isOwn
               onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
               onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
-              onCloseClick={() => {
-                props.onCloseTheory(t.uid);
-                setPrintoutUid(t.uid);
-              }}
+              onCloseClick={() => props.onCloseTheory(t.uid)}
               onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
               isNewsTargetable={(n) => !n.lockedByVerification}
               highlightSlotA={canTargetSlot(t.uid, 'slotA')}
@@ -437,10 +452,6 @@ function MainBoard(props: Props) {
             : 'Le carte Risonanza "Reazione" si giocano solo durante la Finestra di Reazione. Le carte "Immediata" si possono giocare ora: selezionale e scegli il bersaglio.'}
         </p>
       </div>
-
-      {printoutTheory && (
-        <TheoryPrintout theory={printoutTheory} allTheories={cp.theories} onClose={() => setPrintoutUid(null)} />
-      )}
     </div>
   );
 }

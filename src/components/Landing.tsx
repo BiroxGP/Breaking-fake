@@ -5,7 +5,7 @@ export function Landing({ onStart, onRules }: { onStart: () => void; onRules: ()
     <div className="min-h-screen flex flex-col items-center px-4 py-10">
       <div className="max-w-3xl w-full text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-accent2/40 text-accent2 text-xs uppercase tracking-widest mb-6">
-          <Radio size={14} /> Demo giocabile — pre-lancio
+          <Radio size={14} /> Demo giocabile — in fase di test, dicci cosa ne pensi
         </div>
         <h1 className="font-display text-6xl sm:text-7xl text-white leading-none tracking-wide">
           BREAKING <span className="text-accent">FAKE</span>

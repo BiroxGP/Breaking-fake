@@ -14,7 +14,7 @@ import {
 } from './engine';
 import { canCloseTheory, maxAttachableNews } from './rules';
 import { LEVEL_POINTS, NEGATIVE_EFFECTS, POSITIVE_EFFECTS, canAttachNewsToTheory } from './resonanceEffects';
-import type { NewsInstance } from '../types';
+import type { CatalystInstance, NewsInstance } from '../types';
 
 export function aiPickDraft(defs: TheoryDef[]): string[] {
   const sorted = [...defs].sort((a, b) => a.stars - b.stars || Math.random() - 0.5);
@@ -82,8 +82,8 @@ export function aiAttemptSingleAction(initial: GameState): { state: GameState; a
   const playerId = currentPlayer(initial).id;
   const player = initial.players.find((p) => p.id === playerId)!;
 
-  const catalystCard = player.hand.find((c) => c.kind === 'catalyst');
-  if (catalystCard && catalystCard.kind === 'catalyst') {
+  const catalystCards = player.hand.filter((c): c is CatalystInstance => c.kind === 'catalyst');
+  for (const catalystCard of catalystCards) {
     const spot = findOwnSlotForCatalyst(player.theories, catalystCard.def.type);
     if (spot) {
       const res = placeCatalyst(initial, playerId, catalystCard.uid, spot.theory.uid, spot.slotKey);
@@ -101,7 +101,7 @@ export function aiAttemptSingleAction(initial: GameState): { state: GameState; a
   }
 
   const opponents = initial.players.filter((p) => p.id !== playerId);
-  if (catalystCard && catalystCard.kind === 'catalyst') {
+  for (const catalystCard of catalystCards) {
     for (const opp of opponents) {
       const spot = findOwnSlotForCatalyst(opp.theories, catalystCard.def.type);
       if (spot) {

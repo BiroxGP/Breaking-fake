@@ -42,10 +42,12 @@ function CroppedArt({ src, alt, crop, className }: { src: string; alt: string; c
 export function TheoryPrintout({
   theory,
   allTheories,
+  ownerName,
   onClose,
 }: {
   theory: TheoryInstance;
   allTheories: TheoryInstance[];
+  ownerName: string;
   onClose: () => void;
 }) {
   const score = scoreTheory(theory);
@@ -74,6 +76,7 @@ export function TheoryPrintout({
               className="float-left w-40 sm:w-52 rounded-sm border border-ink/40 shadow mr-4 mb-1"
             />
             <h2 className="font-display text-4xl sm:text-5xl leading-[1.05] uppercase">{theory.def.name}</h2>
+            <p className="font-serif italic text-xs text-ink/50 mt-0.5">Chiusa da {ownerName}</p>
             <TheoryFlavor
               flavor={theory.def.flavor}
               descClassName="font-serif text-lg leading-snug mt-3 text-ink/90"
