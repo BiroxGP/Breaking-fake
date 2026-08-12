@@ -1,6 +1,6 @@
 import { Newspaper, X } from 'lucide-react';
 import type { TheoryInstance } from '../types';
-import { FlavorText } from './CardViews';
+import { TheoryFlavor } from './CardViews';
 import { LEVEL_LABELS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
 import { monopolioBonusFor, scoreTheory } from '../game/scoring';
 
@@ -35,9 +35,11 @@ export function TheoryPrintout({
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 px-5 py-4">
           <div>
             <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] uppercase">{theory.def.name}</h2>
-            <p className="font-serif italic text-[15px] leading-snug mt-2 text-ink/90">
-              <FlavorText text={theory.def.flavor} />
-            </p>
+            <TheoryFlavor
+              flavor={theory.def.flavor}
+              descClassName="font-serif text-[15px] leading-snug mt-2 text-ink/90"
+              quoteClassName="font-serif text-[13px] leading-snug mt-1.5 text-ink/70"
+            />
 
             <div className="mt-4">
               <div className="text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-1">

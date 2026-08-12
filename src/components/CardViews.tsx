@@ -41,6 +41,42 @@ export function FlavorText({ text, className }: { text: string; className?: stri
   );
 }
 
+/** Splits a Theory's flavor text into its general description and the sentence(s) citing a
+ * Catalizzatore by name (the `**marked**` part). Falls back to treating the whole thing as one
+ * or the other when there's no clean sentence boundary to split on. */
+function splitFlavor(flavor: string): { description: string; quote: string } {
+  const boldIdx = flavor.indexOf('**');
+  if (boldIdx === -1) return { description: flavor, quote: '' };
+  const sentenceEnd = flavor.lastIndexOf('. ', boldIdx);
+  if (sentenceEnd === -1) return { description: '', quote: flavor };
+  return { description: flavor.slice(0, sentenceEnd + 1).trim(), quote: flavor.slice(sentenceEnd + 2).trim() };
+}
+
+/** Renders a Theory's flavor as a general description line, followed on its own line by the
+ * catalyst-citing sentence — quoted and in italics, smaller than the description — since that's
+ * the part the Coerenza Testuale bonus actually checks against the placed Catalizzatore's name. */
+export function TheoryFlavor({
+  flavor,
+  descClassName,
+  quoteClassName,
+}: {
+  flavor: string;
+  descClassName?: string;
+  quoteClassName?: string;
+}) {
+  const { description, quote } = splitFlavor(flavor);
+  return (
+    <>
+      {description && <div className={descClassName}>{description}</div>}
+      {quote && (
+        <div className={`italic ${quoteClassName ?? ''}`}>
+          “<FlavorText text={quote} />”
+        </div>
+      )}
+    </>
+  );
+}
+
 export function CatalystCardView({
   card,
   onClick,
@@ -242,9 +278,11 @@ export function TheoryCardView({
       <img src={theory.def.image} alt={theory.def.name} className="w-full aspect-[16/9] object-cover" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
-        <div className={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-3'}`}>
-          <FlavorText text={theory.def.flavor} />
-        </div>
+        <TheoryFlavor
+          flavor={theory.def.flavor}
+          descClassName={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-2'}`}
+          quoteClassName={`text-[9px] text-white/40 leading-snug mt-1 ${fullText ? '' : 'line-clamp-2'}`}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-1 px-2 mt-2">
