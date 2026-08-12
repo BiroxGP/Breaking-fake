@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { BookOpen, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
 import type { GameState, HandCard } from '../types';
 import { Hotseat } from './Hotseat';
-import { HoverPreviewProvider } from './HoverPreview';
+import { ClearOnChange, HoverPreviewProvider } from './HoverPreview';
 import { CatalystCardView, NewsCardView, ResonanceCardView, TheoryCardView } from './CardViews';
 import { findTheory } from '../game/engine';
 import { maxAttachableNews } from '../game/rules';
@@ -21,6 +21,7 @@ interface Props {
   onPlayResonance: (cardUid: string) => void;
   onPassReaction: () => void;
   onResolveRecycle: (keepUid: string) => void;
+  onResolveDiscard: (cardUids: string[]) => void;
   onPlayImmediate: (cardUid: string, target: ImmediateTarget) => void;
   onShowRules: () => void;
   onEndGame: () => void;
@@ -37,6 +38,9 @@ export function GameScreen(props: Props) {
 
   return (
     <HoverPreviewProvider>
+      <ClearOnChange
+        sceneKey={`${state.phase}-${!!state.pendingRecycle}-${!!state.pendingReaction}-${!!state.pendingDiscard}-${state.currentPlayerIndex}-${state.turnNumber}`}
+      />
       <div className="min-h-screen pb-4">
         <TopBar
           state={state}
@@ -45,7 +49,42 @@ export function GameScreen(props: Props) {
           onRequestEndGame={() => setShowEndConfirm(true)}
         />
 
-        {state.phase === 'reaction' && reactor ? (
+        {state.pendingRecycle ? (
+          (() => {
+            const recyclePlayer = state.players.find((p) => p.id === state.pendingRecycle!.playerId)!;
+            return recyclePlayer.isAI ? (
+              <ThinkingPanel name={recyclePlayer.name} label="sta scegliendo quale carta tenere (Riciclo Tattico)" />
+            ) : (
+              <Hotseat
+                key={`recycle-${state.pendingRecycle!.playerId}-${state.pendingRecycle!.options.map((o) => o.uid).join('-')}`}
+                revealKey={`recycle-${state.pendingRecycle!.playerId}-${state.pendingRecycle!.options.map((o) => o.uid).join('-')}`}
+                name={recyclePlayer.name}
+              >
+                <RecycleModal
+                  options={state.pendingRecycle!.options}
+                  state={state}
+                  viewerPlayerId={recyclePlayer.id}
+                  onPick={props.onResolveRecycle}
+                />
+              </Hotseat>
+            );
+          })()
+        ) : state.pendingDiscard ? (
+          (() => {
+            const discardPlayer = state.players.find((p) => p.id === state.pendingDiscard!.playerId)!;
+            return discardPlayer.isAI ? (
+              <ThinkingPanel name={discardPlayer.name} label="sta scegliendo cosa scartare" />
+            ) : (
+              <Hotseat
+                key={`discard-${state.pendingDiscard!.playerId}-${state.turnNumber}`}
+                revealKey={`discard-${state.pendingDiscard!.playerId}-${state.turnNumber}`}
+                name={discardPlayer.name}
+              >
+                <DiscardModal player={discardPlayer} excess={state.pendingDiscard!.excess} onConfirm={props.onResolveDiscard} />
+              </Hotseat>
+            );
+          })()
+        ) : state.phase === 'reaction' && reactor ? (
           reactor.isAI ? (
             <ThinkingPanel name={reactor.name} label="sta valutando come reagire" />
           ) : (
@@ -208,17 +247,6 @@ function MainBoard(props: Props) {
   const cp = state.players[state.currentPlayerIndex];
   const [selected, setSelected] = useState<HandCard | null>(null);
 
-  if (state.pendingRecycle && state.pendingRecycle.playerId === cp.id) {
-    return (
-      <RecycleModal
-        options={state.pendingRecycle.options}
-        state={state}
-        viewerPlayerId={cp.id}
-        onPick={props.onResolveRecycle}
-      />
-    );
-  }
-
   if (state.phase === 'draw') {
     return <DrawChooser onDraw={props.onDraw} />;
   }
@@ -350,7 +378,7 @@ function MainBoard(props: Props) {
           La tua mano ({cp.hand.length}/10) {selected && '— seleziona una Teoria bersaglio, o clicca di nuovo la carta per deselezionare'}
         </div>
         <div className="flex gap-2 overflow-x-auto pb-3">
-          {cp.hand.map((card) => {
+          {[...cp.hand].sort((a, b) => HAND_ORDER[a.kind] - HAND_ORDER[b.kind]).map((card) => {
             const isSelected = selected?.uid === card.uid;
             const toggle = () => setSelected(isSelected ? null : card);
             if (card.kind === 'catalyst') return <CatalystCardView key={card.uid} card={card} selected={isSelected} onClick={toggle} />;
@@ -426,6 +454,60 @@ function RecycleModal({
           );
         })}
       </div>
+    </div>
+  );
+}
+
+const HAND_ORDER: Record<HandCard['kind'], number> = { catalyst: 0, news: 1, resonance: 2 };
+
+function DiscardModal({
+  player,
+  excess,
+  onConfirm,
+}: {
+  player: import('../types').Player;
+  excess: number;
+  onConfirm: (cardUids: string[]) => void;
+}) {
+  const [picked, setPicked] = useState<string[]>([]);
+  const sortedHand = [...player.hand].sort((a, b) => HAND_ORDER[a.kind] - HAND_ORDER[b.kind]);
+
+  const toggle = (uid: string) => {
+    setPicked((prev) => {
+      if (prev.includes(uid)) return prev.filter((x) => x !== uid);
+      if (prev.length >= excess) return prev;
+      return [...prev, uid];
+    });
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4 py-14 px-4">
+      <h3 className="font-display text-3xl text-white text-center">Limite di Mano Superato</h3>
+      <p className="text-white/50 text-sm text-center max-w-sm">
+        {player.name} ha più di 10 carte in mano: scegli {excess} carta/e da scartare ({picked.length}/{excess}
+        selezionate).
+      </p>
+      <div className="flex gap-2 flex-wrap justify-center max-w-4xl">
+        {sortedHand.map((card) => {
+          const isSelected = picked.includes(card.uid);
+          const onClick = () => toggle(card.uid);
+          if (card.kind === 'catalyst') return <CatalystCardView key={card.uid} card={card} selected={isSelected} onClick={onClick} />;
+          if (card.kind === 'news') return <NewsCardView key={card.uid} card={card} selected={isSelected} onClick={onClick} />;
+          return <ResonanceCardView key={card.uid} card={card} selected={isSelected} onClick={onClick} />;
+        })}
+      </div>
+      <button
+        type="button"
+        disabled={picked.length !== excess}
+        onClick={() => onConfirm(picked)}
+        className={`mt-2 px-8 py-3 rounded-xl font-display text-2xl tracking-wide ${
+          picked.length === excess
+            ? 'bg-accent text-white hover:bg-accent/80 shadow-glow'
+            : 'bg-white/5 text-white/30 cursor-not-allowed'
+        }`}
+      >
+        Scarta
+      </button>
     </div>
   );
 }

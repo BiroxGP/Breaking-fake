@@ -164,6 +164,11 @@ export interface PendingRecycle {
   options: (CatalystInstance | NewsInstance)[];
 }
 
+export interface PendingDiscard {
+  playerId: string;
+  excess: number;
+}
+
 export interface GameState {
   players: Player[];
   currentPlayerIndex: number;
@@ -181,6 +186,7 @@ export interface GameState {
   theoryDiscard: TheoryDef[];
   pendingReaction: PendingReaction | null;
   pendingRecycle: PendingRecycle | null;
+  pendingDiscard: PendingDiscard | null;
   draft: { choices: Record<string, TheoryDef[]>; submitted: Record<string, boolean> } | null;
   turnNumber: number;
   triggerPlayerId: string | null;

@@ -274,7 +274,7 @@ function startReactionWindow(
   const n = state.players.length;
   const placerIdx = state.players.findIndex((p) => p.id === placedById);
   const queue: string[] = [];
-  for (let i = 1; i <= n; i++) {
+  for (let i = 0; i < n; i++) {
     queue.push(state.players[(placerIdx + i) % n].id);
   }
   state.pendingReaction = {
@@ -286,6 +286,19 @@ function startReactionWindow(
     currentIndex: 0,
   };
   state.phase = 'reaction';
+}
+
+/** Only one Resonance card may be played per reactor: after playing (or passing), the window
+ * always advances to the next player in the queue, closing once everyone has had their turn. */
+function advanceReactionQueue(state: GameState) {
+  const pr = state.pendingReaction;
+  if (!pr) return;
+  pr.currentIndex += 1;
+  if (pr.currentIndex >= pr.queue.length) {
+    state.pendingReaction = null;
+    state.phase = 'actions';
+    addLog(state, 'La Finestra di Reazione si chiude.');
+  }
 }
 
 export function playResonanceCard(prev: GameState, playerId: string, cardUid: string): ActionResult {
@@ -318,6 +331,7 @@ export function playResonanceCard(prev: GameState, playerId: string, cardUid: st
   }
 
   addLog(state, `${player.name} gioca la Risonanza "${card.def.name}" su "${news.def.name}": ${outcome.detail}`);
+  advanceReactionQueue(state);
 
   return { state };
 }
@@ -390,12 +404,7 @@ export function passReaction(prev: GameState, playerId: string): ActionResult {
   if (pr.queue[pr.currentIndex] !== playerId) {
     return { state: prev, error: 'Non è il tuo turno di reazione.' };
   }
-  pr.currentIndex += 1;
-  if (pr.currentIndex >= pr.queue.length) {
-    state.pendingReaction = null;
-    state.phase = 'actions';
-    addLog(state, 'La Finestra di Reazione si chiude.');
-  }
+  advanceReactionQueue(state);
   return { state };
 }
 
@@ -431,16 +440,50 @@ export function endTurn(prev: GameState): GameState {
   const player = currentPlayer(state);
 
   if (player.hand.length > HAND_LIMIT) {
-    const toDiscard = player.hand.length - HAND_LIMIT;
-    for (let i = 0; i < toDiscard; i++) {
-      const card = player.hand.pop();
-      if (!card) break;
-      if (card.kind === 'catalyst') state.catalystDiscard.push(card);
-      else if (card.kind === 'news') state.newsDiscard.push(card);
-      else state.resonanceDiscard.push(card);
-    }
-    addLog(state, `${player.name} supera il limite di mano e scarta ${toDiscard} carta/e.`);
+    state.pendingDiscard = { playerId: player.id, excess: player.hand.length - HAND_LIMIT };
+    addLog(
+      state,
+      `${player.name} ha superato il limite di 10 carte in mano: deve scartarne ${state.pendingDiscard.excess}.`,
+    );
+    return state;
   }
+
+  return advanceTurn(state);
+}
+
+export function resolveDiscard(prev: GameState, playerId: string, cardUids: string[]): ActionResult {
+  const state = clone(prev);
+  if (!state.pendingDiscard || state.pendingDiscard.playerId !== playerId) {
+    return { state: prev, error: 'Nessuno scarto da risolvere per questo giocatore.' };
+  }
+  if (cardUids.length !== state.pendingDiscard.excess) {
+    return { state: prev, error: `Devi scartare esattamente ${state.pendingDiscard.excess} carta/e.` };
+  }
+  const player = state.players.find((p) => p.id === playerId);
+  if (!player) return { state: prev, error: 'Giocatore non trovato.' };
+
+  const uniqueUids = new Set(cardUids);
+  if (uniqueUids.size !== cardUids.length) {
+    return { state: prev, error: 'Non puoi scartare la stessa carta più volte.' };
+  }
+
+  for (const uid of uniqueUids) {
+    const idx = player.hand.findIndex((c) => c.uid === uid);
+    if (idx === -1) return { state: prev, error: 'Carta non trovata in mano.' };
+    const [card] = player.hand.splice(idx, 1);
+    if (card.kind === 'catalyst') state.catalystDiscard.push(card);
+    else if (card.kind === 'news') state.newsDiscard.push(card);
+    else state.resonanceDiscard.push(card);
+  }
+
+  addLog(state, `${player.name} scarta ${cardUids.length} carta/e per rientrare nel limite di mano.`);
+  state.pendingDiscard = null;
+
+  return { state: advanceTurn(state) };
+}
+
+function advanceTurn(state: GameState): GameState {
+  const player = currentPlayer(state);
 
   if (state.triggerPlayerId) {
     if (player.id === state.triggerPlayerId) {

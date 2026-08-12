@@ -7,6 +7,7 @@ import {
   passReaction,
   placeCatalyst,
   playResonanceCard,
+  resolveDiscard,
   resolveRecycle,
   startDrawPhase,
   submitDraftPick,
@@ -177,6 +178,27 @@ export function runAiReaction(state: GameState): GameState {
     if (!res.error) return res.state;
   }
   const res = passReaction(state, reactorId);
+  return res.error ? state : res.state;
+}
+
+function cardRoughValue(card: GameState['players'][number]['hand'][number]): number {
+  if (card.kind === 'catalyst') return card.def.points;
+  if (card.kind === 'news') return LEVEL_POINTS[card.def.startLevel];
+  return 3.5; // Resonance cards are scarce/flexible: prefer keeping them over low-value commons.
+}
+
+export function runAiDiscard(state: GameState): GameState {
+  const pd = state.pendingDiscard;
+  if (!pd) return state;
+  const player = state.players.find((p) => p.id === pd.playerId);
+  if (!player) return state;
+
+  const toDiscard = [...player.hand]
+    .sort((a, b) => cardRoughValue(a) - cardRoughValue(b))
+    .slice(0, pd.excess)
+    .map((c) => c.uid);
+
+  const res = resolveDiscard(state, pd.playerId, toDiscard);
   return res.error ? state : res.state;
 }
 

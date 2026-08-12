@@ -10,6 +10,7 @@ import {
   placeCatalyst,
   playImmediateResonance,
   playResonanceCard,
+  resolveDiscard,
   resolveRecycle,
   startDrawPhase,
   submitDraftPick,
@@ -17,6 +18,7 @@ import {
 import {
   aiAttemptSingleAction,
   aiCloseAllPossible,
+  runAiDiscard,
   runAiDraftPick,
   runAiDraw,
   runAiReaction,
@@ -41,6 +43,12 @@ function stepAi(state: GameState): GameState {
   if (state.pendingRecycle) {
     const player = state.players.find((p) => p.id === state.pendingRecycle!.playerId);
     if (player?.isAI) return runAiRecycle(state);
+    return state;
+  }
+
+  if (state.pendingDiscard) {
+    const player = state.players.find((p) => p.id === state.pendingDiscard!.playerId);
+    if (player?.isAI) return runAiDiscard(state);
     return state;
   }
 
@@ -181,6 +189,13 @@ export default function App() {
           withState((s) => {
             if (!s.pendingRecycle) return s;
             const res = resolveRecycle(s, s.pendingRecycle.playerId, keepUid);
+            return res.state;
+          })
+        }
+        onResolveDiscard={(cardUids) =>
+          withState((s) => {
+            if (!s.pendingDiscard) return s;
+            const res = resolveDiscard(s, s.pendingDiscard.playerId, cardUids);
             return res.state;
           })
         }

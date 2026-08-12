@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -66,6 +67,17 @@ export function HoverPreviewProvider({ children }: { children: ReactNode }) {
 
 export function useHoverPreview() {
   return useContext(HoverPreviewCtx);
+}
+
+/** When a card is hovered right as the screen changes (a modal swaps in, the turn passes, a
+ * phase transitions), React unmounts it without ever firing onMouseLeave, leaving the zoomed
+ * preview stuck on screen. Render this once per "scene" so it clears whenever `sceneKey` changes. */
+export function ClearOnChange({ sceneKey }: { sceneKey: string }) {
+  const setPreview = useHoverPreview();
+  useEffect(() => {
+    setPreview(null);
+  }, [sceneKey, setPreview]);
+  return null;
 }
 
 /** Wraps a small card so hovering it shows `preview` (a bigger, non-interactive rendition),
