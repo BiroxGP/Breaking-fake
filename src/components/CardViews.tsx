@@ -190,6 +190,7 @@ export function TheoryCardView({
   highlightSlotB,
   highlightAttach,
   isNewsTargetable,
+  fullText,
 }: {
   theory: TheoryInstance;
   isOwn: boolean;
@@ -201,6 +202,8 @@ export function TheoryCardView({
   highlightSlotB?: boolean;
   highlightAttach?: boolean;
   isNewsTargetable?: (news: NewsInstance) => boolean;
+  /** Full, untruncated flavor text — used for the magnified preview where clipping defeats the purpose. */
+  fullText?: boolean;
 }) {
   const closeable = !theory.closed && canCloseTheory(theory);
   const cardEl = (
@@ -219,7 +222,7 @@ export function TheoryCardView({
       <img src={theory.def.image} alt={theory.def.name} className="w-full aspect-[16/9] object-cover" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
-        <div className="text-[10px] text-white/50 leading-snug mt-0.5 line-clamp-3">{theory.def.flavor}</div>
+        <div className={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-3'}`}>{theory.def.flavor}</div>
       </div>
 
       <div className="grid grid-cols-2 gap-1 px-2 mt-2">
@@ -233,10 +236,10 @@ export function TheoryCardView({
               disabled={!onSlotClick}
               onClick={() => onSlotClick?.(key)}
               className={`rounded-md border text-[10px] px-1 py-2 flex flex-col items-center gap-0.5 ${
-                slot.filled
-                  ? 'border-indigo-400/40 bg-indigo-950/60'
-                  : highlight
+                highlight
                   ? 'border-accent2 bg-accent2/10 animate-pulse'
+                  : slot.filled
+                  ? 'border-indigo-400/40 bg-indigo-950/60'
                   : 'border-dashed border-white/20 bg-black/20'
               } ${onSlotClick ? 'cursor-pointer' : ''}`}
             >
@@ -313,7 +316,7 @@ export function TheoryCardView({
     </div>
   );
   return (
-    <Magnify preview={<TheoryCardView theory={theory} isOwn={isOwn} />} className="shrink-0">
+    <Magnify preview={<TheoryCardView theory={theory} isOwn={isOwn} fullText />} className="shrink-0">
       {cardEl}
     </Magnify>
   );

@@ -77,10 +77,16 @@ function stepAi(state: GameState): GameState {
   return state;
 }
 
+interface ActionResult {
+  state: GameState;
+  error?: string;
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [state, setState] = useState<GameState | null>(null);
   const [showRules, setShowRules] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!state) return;
@@ -95,8 +101,27 @@ export default function App() {
     };
   }, [state]);
 
+  useEffect(() => {
+    if (!actionError) return;
+    const timer = setTimeout(() => setActionError(null), 4000);
+    return () => clearTimeout(timer);
+  }, [actionError]);
+
   const withState = (fn: (s: GameState) => GameState) => {
     setState((prev) => (prev ? fn(prev) : prev));
+  };
+
+  /** Runs an action that can fail validation (wrong turn, locked target, etc.) and surfaces
+   * the error as a toast instead of silently doing nothing when it's rejected. */
+  const runResult = (fn: (s: GameState) => ActionResult) => {
+    if (!state) return;
+    const res = fn(state);
+    if (res.error) {
+      setActionError(res.error);
+      return;
+    }
+    setActionError(null);
+    setState(res.state);
   };
 
   const confirmSetup = (configs: NewPlayerConfig[]) => {
@@ -145,65 +170,59 @@ export default function App() {
     <>
       <GameScreen
         state={state}
+        actionError={actionError}
+        onDismissError={() => setActionError(null)}
         onShowRules={() => setShowRules(true)}
         onDraw={(c, n) => withState((s) => startDrawPhase(s, c, n))}
         onPlaceCatalyst={(cardUid, theoryUid, slotKey) =>
-          withState((s) => {
+          runResult((s) => {
             const playerId = s.players[s.currentPlayerIndex].id;
-            const res = placeCatalyst(s, playerId, cardUid, theoryUid, slotKey);
-            return res.state;
+            return placeCatalyst(s, playerId, cardUid, theoryUid, slotKey);
           })
         }
         onAttachNews={(cardUid, theoryUid) =>
-          withState((s) => {
+          runResult((s) => {
             const playerId = s.players[s.currentPlayerIndex].id;
-            const res = attachNews(s, playerId, cardUid, theoryUid);
-            return res.state;
+            return attachNews(s, playerId, cardUid, theoryUid);
           })
         }
         onCloseTheory={(theoryUid) =>
-          withState((s) => {
+          runResult((s) => {
             const playerId = s.players[s.currentPlayerIndex].id;
-            const res = closeTheory(s, playerId, theoryUid);
-            return res.state;
+            return closeTheory(s, playerId, theoryUid);
           })
         }
         onEndTurn={() => withState((s) => endTurn(s))}
         onPlayResonance={(cardUid) =>
-          withState((s) => {
-            if (!s.pendingReaction) return s;
+          runResult((s) => {
+            if (!s.pendingReaction) return { state: s };
             const playerId = s.pendingReaction.queue[s.pendingReaction.currentIndex];
-            const res = playResonanceCard(s, playerId, cardUid);
-            return res.state;
+            return playResonanceCard(s, playerId, cardUid);
           })
         }
         onPassReaction={() =>
-          withState((s) => {
-            if (!s.pendingReaction) return s;
+          runResult((s) => {
+            if (!s.pendingReaction) return { state: s };
             const playerId = s.pendingReaction.queue[s.pendingReaction.currentIndex];
-            const res = passReaction(s, playerId);
-            return res.state;
+            return passReaction(s, playerId);
           })
         }
         onResolveRecycle={(keepUid) =>
-          withState((s) => {
-            if (!s.pendingRecycle) return s;
-            const res = resolveRecycle(s, s.pendingRecycle.playerId, keepUid);
-            return res.state;
+          runResult((s) => {
+            if (!s.pendingRecycle) return { state: s };
+            return resolveRecycle(s, s.pendingRecycle.playerId, keepUid);
           })
         }
         onResolveDiscard={(cardUids) =>
-          withState((s) => {
-            if (!s.pendingDiscard) return s;
-            const res = resolveDiscard(s, s.pendingDiscard.playerId, cardUids);
-            return res.state;
+          runResult((s) => {
+            if (!s.pendingDiscard) return { state: s };
+            return resolveDiscard(s, s.pendingDiscard.playerId, cardUids);
           })
         }
         onPlayImmediate={(cardUid, target) =>
-          withState((s) => {
+          runResult((s) => {
             const playerId = s.players[s.currentPlayerIndex].id;
-            const res = playImmediateResonance(s, playerId, cardUid, target);
-            return res.state;
+            return playImmediateResonance(s, playerId, cardUid, target);
           })
         }
         onEndGame={restart}

@@ -25,6 +25,8 @@ interface Props {
   onPlayImmediate: (cardUid: string, target: ImmediateTarget) => void;
   onShowRules: () => void;
   onEndGame: () => void;
+  actionError: string | null;
+  onDismissError: () => void;
 }
 
 export function GameScreen(props: Props) {
@@ -111,8 +113,24 @@ export function GameScreen(props: Props) {
             onCancel={() => setShowEndConfirm(false)}
           />
         )}
+        {props.actionError && <ErrorToast message={props.actionError} onDismiss={props.onDismissError} />}
       </div>
     </HoverPreviewProvider>
+  );
+}
+
+function ErrorToast({ message, onDismiss }: { message: string; onDismiss: () => void }) {
+  return (
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[250] max-w-md w-[calc(100%-2rem)] px-4">
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="w-full text-left rounded-lg border border-accent/50 bg-ink/95 shadow-lg px-4 py-3 text-sm text-white flex items-start gap-2"
+      >
+        <span className="text-accent font-bold">⚠</span>
+        <span>{message}</span>
+      </button>
+    </div>
   );
 }
 
