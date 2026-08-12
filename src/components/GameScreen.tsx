@@ -8,6 +8,8 @@ import { findTheory } from '../game/engine';
 import { maxAttachableNews } from '../game/rules';
 import { canAttachNewsToTheory } from '../game/resonanceEffects';
 import { findApplicableTheories } from '../game/targeting';
+import { computeScores } from '../game/scoring';
+import { TheoryPrintout } from './TheoryPrintout';
 
 type ImmediateTarget = { theoryUid: string; newsUid: string };
 
@@ -145,31 +147,50 @@ function TopBar({
   onToggleLog: () => void;
   onRequestEndGame: () => void;
 }) {
+  const scores = computeScores(state);
+  const cpId = state.players[state.currentPlayerIndex].id;
+
   return (
-    <div className="sticky top-0 z-20 bg-ink/90 backdrop-blur border-b border-white/10 px-4 py-2 flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        <span className="font-display text-2xl text-white tracking-wide">
-          BREAKING <span className="text-accent">FAKE</span>
-        </span>
-        <span className="text-white/40 text-xs">Turno {state.turnNumber}</span>
-        {state.triggerPlayerId && (
-          <span className="text-accent text-xs font-bold uppercase animate-pulse">Ultimo Giro!</span>
-        )}
+    <div className="sticky top-0 z-20 bg-ink/90 backdrop-blur border-b border-white/10 px-4 py-2 flex flex-col gap-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="font-display text-2xl text-white tracking-wide">
+            BREAKING <span className="text-accent">FAKE</span>
+          </span>
+          <span className="text-white/40 text-xs">Turno {state.turnNumber}</span>
+          {state.triggerPlayerId && (
+            <span className="text-accent text-xs font-bold uppercase animate-pulse">Ultimo Giro!</span>
+          )}
+        </div>
+        <div className="flex items-center gap-2">
+          <button onClick={onToggleLog} className="p-2 rounded-md hover:bg-white/10 text-white/70">
+            <ScrollText size={18} />
+          </button>
+          <button onClick={onShowRules} className="p-2 rounded-md hover:bg-white/10 text-white/70">
+            <BookOpen size={18} />
+          </button>
+          <button
+            onClick={onRequestEndGame}
+            className="p-2 rounded-md hover:bg-accent/20 text-white/70 hover:text-accent"
+            title="Termina Partita"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button onClick={onToggleLog} className="p-2 rounded-md hover:bg-white/10 text-white/70">
-          <ScrollText size={18} />
-        </button>
-        <button onClick={onShowRules} className="p-2 rounded-md hover:bg-white/10 text-white/70">
-          <BookOpen size={18} />
-        </button>
-        <button
-          onClick={onRequestEndGame}
-          className="p-2 rounded-md hover:bg-accent/20 text-white/70 hover:text-accent"
-          title="Termina Partita"
-        >
-          <LogOut size={18} />
-        </button>
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {state.players.map((p) => (
+          <span
+            key={p.id}
+            className={`text-[11px] px-2 py-0.5 rounded-full border flex items-center gap-1 ${
+              p.id === cpId ? 'border-accent2 bg-accent2/10 text-white' : 'border-white/10 text-white/50'
+            }`}
+            title="Punti Vittoria attuali (solo Teorie chiuse)"
+          >
+            {p.name}
+            <strong className="text-gold">{scores[p.id]?.total ?? 0} PV</strong>
+          </span>
+        ))}
       </div>
     </div>
   );
@@ -264,10 +285,13 @@ function MainBoard(props: Props) {
   const { state } = props;
   const cp = state.players[state.currentPlayerIndex];
   const [selected, setSelected] = useState<HandCard | null>(null);
+  const [printoutUid, setPrintoutUid] = useState<string | null>(null);
 
   if (state.phase === 'draw') {
     return <DrawChooser onDraw={props.onDraw} />;
   }
+
+  const printoutTheory = printoutUid ? findTheory(state, printoutUid) : null;
 
   const others = state.players.filter((p) => p.id !== cp.id);
 
@@ -369,7 +393,10 @@ function MainBoard(props: Props) {
               isOwn
               onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
               onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
-              onCloseClick={() => props.onCloseTheory(t.uid)}
+              onCloseClick={() => {
+                props.onCloseTheory(t.uid);
+                setPrintoutUid(t.uid);
+              }}
               onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
               isNewsTargetable={(n) => !n.lockedByVerification}
               highlightSlotA={canTargetSlot(t.uid, 'slotA')}
@@ -410,6 +437,10 @@ function MainBoard(props: Props) {
             : 'Le carte Risonanza "Reazione" si giocano solo durante la Finestra di Reazione. Le carte "Immediata" si possono giocare ora: selezionale e scegli il bersaglio.'}
         </p>
       </div>
+
+      {printoutTheory && (
+        <TheoryPrintout theory={printoutTheory} allTheories={cp.theories} onClose={() => setPrintoutUid(null)} />
+      )}
     </div>
   );
 }

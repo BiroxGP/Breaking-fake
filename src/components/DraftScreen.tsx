@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { CatalystType, GameState, TheoryDef } from '../types';
 import { Hotseat } from './Hotseat';
+import { FlavorText } from './CardViews';
 
 function Stars({ n }: { n: number }) {
   return (
@@ -34,7 +35,9 @@ function TheoryPickCard({ def, picked, onToggle }: { def: TheoryDef; picked: boo
         <Stars n={def.stars} />
       </div>
       <div className="font-display text-xl text-white leading-tight">{def.name}</div>
-      <div className="text-[11px] text-white/50 leading-snug">{def.flavor}</div>
+      <div className="text-[11px] text-white/50 leading-snug">
+        <FlavorText text={def.flavor} />
+      </div>
       <div className="flex items-center justify-between mt-1 text-[11px] text-white/60">
         <span>Slot: {def.slotA} + {def.slotB}</span>
         <span className="text-gold font-bold">{def.basePV} PV</span>

@@ -21,6 +21,26 @@ const TYPE_ICON: Record<string, string> = {
   Scopo: '🎯',
 };
 
+/** Splits `**marked**` segments out of a Theory's flavor text into highlighted spans — these mark
+ * the Catalizzatore names cited in the narrative, for the Coerenza Testuale bonus (+5 PV when the
+ * placed Catalizzatore's name matches one of them). */
+export function FlavorText({ text, className }: { text: string; className?: string }) {
+  const parts = text.split(/(\*\*.+?\*\*)/g);
+  return (
+    <span className={className}>
+      {parts.map((part, i) =>
+        part.startsWith('**') && part.endsWith('**') ? (
+          <strong key={i} className="text-gold font-bold">
+            {part.slice(2, -2)}
+          </strong>
+        ) : (
+          <span key={i}>{part}</span>
+        ),
+      )}
+    </span>
+  );
+}
+
 export function CatalystCardView({
   card,
   onClick,
@@ -222,20 +242,23 @@ export function TheoryCardView({
       <img src={theory.def.image} alt={theory.def.name} className="w-full aspect-[16/9] object-cover" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
-        <div className={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-3'}`}>{theory.def.flavor}</div>
+        <div className={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-3'}`}>
+          <FlavorText text={theory.def.flavor} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-1 px-2 mt-2">
         {(['slotA', 'slotB'] as const).map((key) => {
           const slot = theory[key];
           const highlight = key === 'slotA' ? highlightSlotA : highlightSlotB;
+          const coerente = !!slot.filled && theory.def.testuale.includes(slot.filled.def.id);
           return (
             <button
               key={key}
               type="button"
               disabled={!onSlotClick}
               onClick={() => onSlotClick?.(key)}
-              className={`rounded-md border text-[10px] px-1 py-2 flex flex-col items-center gap-0.5 ${
+              className={`relative rounded-md border text-[10px] px-1 py-2 flex flex-col items-center gap-0.5 ${
                 highlight
                   ? 'border-accent2 bg-accent2/10 animate-pulse'
                   : slot.filled
@@ -243,6 +266,14 @@ export function TheoryCardView({
                   : 'border-dashed border-white/20 bg-black/20'
               } ${onSlotClick ? 'cursor-pointer' : ''}`}
             >
+              {coerente && (
+                <span
+                  title="Coerenza Testuale: questo Catalizzatore è citato nel testo della Teoria (+5 PV alla chiusura)"
+                  className="absolute -top-1.5 -right-1.5 text-[9px] leading-none bg-gold text-ink rounded-full w-4 h-4 flex items-center justify-center font-bold shadow"
+                >
+                  ✓
+                </span>
+              )}
               {slot.filled ? (
                 <Magnify preview={<CatalystCardView card={slot.filled} />}>
                   <span className="text-white font-semibold">{slot.filled.def.name}</span>

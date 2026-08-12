@@ -28,7 +28,13 @@ export interface TheoryDef {
   topic: TheoryTopic;
   stars: 1 | 2 | 3;
   basePV: number;
+  /** May contain `**word**` markers around the catalyst names cited in the card's narrative,
+   * matching `testuale` below (used to award the Coerenza Testuale bonus and to highlight the
+   * reference in the UI). Not every marker corresponds to a real Catalyst — see `testuale`. */
   flavor: string;
+  /** Catalyst ids referenced by the flavor text's `**markers**`, in the order they appear.
+   * `null` when that marker is card flavor with no corresponding real Catalyst card. */
+  testuale: [string | null, string | null];
   slotA: CatalystType;
   slotB: CatalystType;
   image: string;
