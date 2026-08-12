@@ -34,31 +34,44 @@ export function TheoryPrintout({
 
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-5 px-5 py-4">
           <div>
+            <img
+              src={theory.def.image}
+              alt={theory.def.name}
+              className="float-left w-28 sm:w-32 aspect-[4/3] object-cover rounded-sm border border-ink/40 shadow grayscale contrast-125 mr-3 mb-1"
+            />
             <h2 className="font-display text-3xl sm:text-4xl leading-[1.05] uppercase">{theory.def.name}</h2>
             <TheoryFlavor
               flavor={theory.def.flavor}
               descClassName="font-serif text-[15px] leading-snug mt-2 text-ink/90"
               quoteClassName="font-serif text-[13px] leading-snug mt-1.5 text-ink/70"
             />
+            <div className="clear-both" />
 
             <div className="mt-4">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-1">
+              <div className="text-[10px] uppercase tracking-widest font-bold text-ink/50 mb-2">
                 Le prove che confermano la storia
               </div>
               {theory.attachedNews.length === 0 ? (
                 <p className="text-sm italic text-ink/50">Nessuna Notizia collegata a supporto.</p>
               ) : (
-                <ul className="flex flex-col gap-1.5">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {theory.attachedNews.map((n) => (
-                    <li key={n.uid} className="text-sm border-l-2 border-ink/30 pl-2">
-                      <span className="font-bold">"{n.def.name}"</span>{' '}
-                      <span className="text-ink/60">
-                        — {isEffectivelyPrincipale(n, theory) ? 'Principale' : 'Secondaria'}, Diffusione{' '}
-                        {LEVEL_LABELS[n.level]} ({newsScoreContribution(n, theory)} PV)
-                      </span>
-                    </li>
+                    <div key={n.uid} className="border border-ink/25 rounded-sm overflow-hidden bg-black/[0.02]">
+                      <img
+                        src={n.def.image}
+                        alt={n.def.name}
+                        className="w-full aspect-[4/3] object-cover grayscale contrast-125"
+                      />
+                      <div className="p-1.5">
+                        <div className="font-serif font-bold text-[11px] leading-tight">"{n.def.name}"</div>
+                        <div className="text-[9px] text-ink/60 mt-0.5">
+                          {isEffectivelyPrincipale(n, theory) ? 'Principale' : 'Secondaria'} · {LEVEL_LABELS[n.level]} ·{' '}
+                          {newsScoreContribution(n, theory)} PV
+                        </div>
+                      </div>
+                    </div>
                   ))}
-                </ul>
+                </div>
               )}
             </div>
 
