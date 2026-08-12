@@ -9,7 +9,7 @@ import { maxAttachableNews } from '../game/rules';
 import { canAttachNewsToTheory } from '../game/resonanceEffects';
 import { findApplicableTheories } from '../game/targeting';
 
-type ImmediateTarget = { theoryUid: string; newsUid: string } | { theoryUid: string; slotKey: 'slotA' | 'slotB' };
+type ImmediateTarget = { theoryUid: string; newsUid: string };
 
 interface Props {
   state: GameState;
@@ -270,25 +270,18 @@ function MainBoard(props: Props) {
   }
 
   const others = state.players.filter((p) => p.id !== cp.id);
-  const isInsabbiamento = selected?.kind === 'resonance' && selected.def.effectId === 'insabbiamento';
 
   const canTargetSlot = (theoryUid: string, slotKey: 'slotA' | 'slotB') => {
-    if (!selected) return false;
+    if (!selected || selected.kind !== 'catalyst') return false;
     const theory = findTheory(state, theoryUid);
     if (!theory || theory.closed) return false;
     const slot = theory[slotKey];
-    if (selected.kind === 'catalyst') {
-      if (slot.required !== selected.def.type) return false;
-      if (slot.filled && theory.locked) return false;
-      const isOpponent = theory.ownerId !== cp.id;
-      if (isOpponent && state.opponentActionUsed) return false;
-      if (!isOpponent && state.selfActionUsed) return false;
-      return true;
-    }
-    if (isInsabbiamento) {
-      return !!slot.filled && theory.attachedNews.length === 0;
-    }
-    return false;
+    if (slot.required !== selected.def.type) return false;
+    if (slot.filled && theory.locked) return false;
+    const isOpponent = theory.ownerId !== cp.id;
+    if (isOpponent && state.opponentActionUsed) return false;
+    if (!isOpponent && state.selfActionUsed) return false;
+    return true;
   };
 
   const canTargetAttach = (theoryUid: string) => {
@@ -303,16 +296,12 @@ function MainBoard(props: Props) {
     return canAttachNewsToTheory(selected, theory);
   };
 
-  const canTargetNews = () => selected?.kind === 'resonance' && selected.def.type === 'Immediata' && !isInsabbiamento;
+  const canTargetNews = () => selected?.kind === 'resonance' && selected.def.type === 'Immediata';
 
   const handleSlotClick = (theoryUid: string, slotKey: 'slotA' | 'slotB') => {
-    if (!selected) return;
+    if (!selected || selected.kind !== 'catalyst') return;
     if (!canTargetSlot(theoryUid, slotKey)) return;
-    if (selected.kind === 'catalyst') {
-      props.onPlaceCatalyst(selected.uid, theoryUid, slotKey);
-    } else {
-      props.onPlayImmediate(selected.uid, { theoryUid, slotKey });
-    }
+    props.onPlaceCatalyst(selected.uid, theoryUid, slotKey);
     setSelected(null);
   };
 
@@ -357,7 +346,7 @@ function MainBoard(props: Props) {
                 key={t.uid}
                 theory={t}
                 isOwn={false}
-                onSlotClick={selected && (selected.kind === 'catalyst' || isInsabbiamento) ? (slot) => handleSlotClick(t.uid, slot) : undefined}
+                onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
                 onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
                 onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
                 isNewsTargetable={(n) => !n.lockedByVerification}
@@ -378,7 +367,7 @@ function MainBoard(props: Props) {
               key={t.uid}
               theory={t}
               isOwn
-              onSlotClick={selected && (selected.kind === 'catalyst' || isInsabbiamento) ? (slot) => handleSlotClick(t.uid, slot) : undefined}
+              onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
               onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
               onCloseClick={() => props.onCloseTheory(t.uid)}
               onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
@@ -414,9 +403,7 @@ function MainBoard(props: Props) {
           {cp.hand.length === 0 && <div className="text-white/30 text-sm italic py-4">Mano vuota.</div>}
         </div>
         <p className="text-[11px] text-white/30">
-          {isInsabbiamento
-            ? 'Insabbiamento: scegli una Notizia da colpire, oppure un Catalizzatore su una Teoria senza Notizie collegate.'
-            : selected?.kind === 'resonance'
+          {selected?.kind === 'resonance'
             ? 'Scegli una Notizia in gioco (anche avversaria) da colpire con questa carta Immediata.'
             : selected?.kind === 'news'
             ? 'Una Notizia si può collegare solo a una Teoria il cui topic corrisponde alla sua Categoria Principale o Secondaria (evidenziate qui sopra).'

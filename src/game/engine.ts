@@ -340,7 +340,7 @@ export function playImmediateResonance(
   prev: GameState,
   playerId: string,
   cardUid: string,
-  target: { theoryUid: string; newsUid: string } | { theoryUid: string; slotKey: 'slotA' | 'slotB' },
+  target: { theoryUid: string; newsUid: string },
 ): ActionResult {
   const state = clone(prev);
   const player = state.players.find((p) => p.id === playerId);
@@ -355,27 +355,6 @@ export function playImmediateResonance(
 
   const theory = findTheory(state, target.theoryUid);
   if (!theory) return { state: prev, error: 'Teoria non trovata.' };
-
-  if ('slotKey' in target) {
-    if (card.def.effectId !== 'insabbiamento') {
-      return { state: prev, error: 'Questa carta non può bersagliare un Catalizzatore.' };
-    }
-    if (theory.attachedNews.length > 0) {
-      return { state: prev, error: 'Puoi rimuovere un Catalizzatore solo da una Teoria senza Notizie collegate.' };
-    }
-    const slot = theory[target.slotKey];
-    if (!slot.filled) return { state: prev, error: 'Slot vuoto.' };
-    const removed = slot.filled;
-    slot.filled = null;
-    state.catalystDiscard.push(removed);
-    player.hand.splice(cardIdx, 1);
-    state.resonanceDiscard.push(card);
-    addLog(
-      state,
-      `${player.name} gioca "${card.def.name}": rimuove il Catalizzatore "${removed.def.name}" da "${theory.def.name}".`,
-    );
-    return { state };
-  }
 
   const news = theory.attachedNews.find((n) => n.uid === target.newsUid);
   if (!news) return { state: prev, error: 'Notizia non trovata.' };
