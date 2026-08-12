@@ -462,10 +462,11 @@ export function resolveDiscard(prev: GameState, playerId: string, cardUids: stri
 }
 
 function advanceTurn(state: GameState): GameState {
-  const player = currentPlayer(state);
-
+  // Once a player closes their 3rd Teoria, every other player still gets exactly one more turn
+  // (Scoop del Secolo) before the game ends — it must NOT end on the trigger player's own turn.
   if (state.triggerPlayerId) {
-    if (player.id === state.triggerPlayerId) {
+    state.finalTurnsRemaining -= 1;
+    if (state.finalTurnsRemaining < 0) {
       state.phase = 'gameover';
       state.scores = computeScores(state);
       const best = Object.values(state.scores).sort((a, b) => b.total - a.total)[0];
