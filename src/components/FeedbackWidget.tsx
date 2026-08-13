@@ -4,10 +4,10 @@ import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'breaking-fake-feedback-submitted';
 
-// TODO: swap in the real profile URLs once they exist.
+// TODO: swap in the real Instagram profile URL once it exists.
 const SOCIAL_LINKS = {
   instagram: '#',
-  facebook: '#',
+  facebook: 'https://www.facebook.com/1305761112613079',
 };
 
 export function FeedbackWidget({ className }: { className?: string }) {
