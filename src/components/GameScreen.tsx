@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { BookOpen, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
 import type { GameState, HandCard } from '../types';
 import { Hotseat } from './Hotseat';
@@ -45,13 +45,6 @@ export function GameScreen(props: Props) {
     ? state.players.find((p) => p.id === state.pendingPrintout!.ownerId)
     : null;
   const printoutTheory = state.pendingPrintout ? findTheory(state, state.pendingPrintout.theoryUid) : null;
-
-  useEffect(() => {
-    if (!state.pendingPrintout) return;
-    const timer = setTimeout(() => props.onDismissPrintout(), 7000);
-    return () => clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.pendingPrintout?.theoryUid]);
 
   return (
     <HoverPreviewProvider>
