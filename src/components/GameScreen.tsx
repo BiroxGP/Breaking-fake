@@ -49,7 +49,7 @@ export function GameScreen(props: Props) {
   return (
     <HoverPreviewProvider>
       <ClearOnChange
-        sceneKey={`${state.phase}-${!!state.pendingRecycle}-${!!state.pendingReaction}-${!!state.pendingDiscard}-${state.currentPlayerIndex}-${state.turnNumber}`}
+        sceneKey={`${state.phase}-${!!state.pendingRecycle}-${!!state.pendingReaction}-${!!state.pendingDiscard}-${!!state.pendingPrintout}-${state.currentPlayerIndex}-${state.turnNumber}`}
       />
       <div className="min-h-screen pb-4">
         <TopBar

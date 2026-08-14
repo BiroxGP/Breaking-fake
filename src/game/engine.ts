@@ -293,11 +293,18 @@ function startReactionWindow(
 function advanceReactionQueue(state: GameState) {
   const pr = state.pendingReaction;
   if (!pr) return;
+  const theory = findTheory(state, pr.theoryUid);
+  const targetGone = !theory || !theory.attachedNews.some((n) => n.uid === pr.newsUid);
   pr.currentIndex += 1;
-  if (pr.currentIndex >= pr.queue.length) {
+  if (targetGone || pr.currentIndex >= pr.queue.length) {
     state.pendingReaction = null;
     state.phase = 'actions';
-    addLog(state, 'La Finestra di Reazione si chiude.');
+    addLog(
+      state,
+      targetGone
+        ? 'La notizia bersaglio è stata rimossa dal gioco: la Finestra di Reazione si chiude.'
+        : 'La Finestra di Reazione si chiude.',
+    );
   }
 }
 
