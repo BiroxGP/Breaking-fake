@@ -82,6 +82,11 @@ export function ClearOnChange({ sceneKey }: { sceneKey: string }) {
 }
 
 const LONG_PRESS_MS = 350;
+/** After a real touch, mobile browsers still dispatch synthetic "ghost" mouseenter/mousemove
+ * events shortly after (for pages that don't call preventDefault) — long enough that a plain tap
+ * would otherwise trigger `show` a second time via the mouse handlers, undoing the touch fix
+ * below. Any mouse event within this window of a real touch is ignored. */
+const GHOST_MOUSE_EVENT_MS = 700;
 
 /** Wraps a small card so hovering it shows `preview` (a bigger, non-interactive rendition),
  * fixed on-screen at cursor height, flipping to whichever side has room so it's never clipped.
@@ -102,6 +107,7 @@ export function Magnify({
 }) {
   const setPreview = useHoverPreview();
   const longPressTimer = useRef<number | null>(null);
+  const lastTouchAt = useRef(0);
 
   const clearLongPressTimer = () => {
     if (longPressTimer.current !== null) {
@@ -111,6 +117,7 @@ export function Magnify({
   };
 
   const show = (e: ReactMouseEvent) => {
+    if (Date.now() - lastTouchAt.current < GHOST_MOUSE_EVENT_MS) return;
     setPreview({ content: preview, x: e.clientX, y: e.clientY });
   };
 
@@ -119,6 +126,7 @@ export function Magnify({
     if (!touch) return;
     const x = touch.clientX;
     const y = touch.clientY;
+    lastTouchAt.current = Date.now();
     clearLongPressTimer();
     longPressTimer.current = window.setTimeout(() => {
       setPreview({ content: preview, x, y });
@@ -127,6 +135,7 @@ export function Magnify({
   };
 
   const handleTouchEnd = () => {
+    lastTouchAt.current = Date.now();
     clearLongPressTimer();
     setPreview(null);
   };

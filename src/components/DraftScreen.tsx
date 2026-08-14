@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { CatalystType, GameState, TheoryDef } from '../types';
 import { Hotseat } from './Hotseat';
-import { TheoryFlavor } from './CardViews';
+import { CroppedArt, THEORY_ART_CROP, TheoryFlavor } from './CardViews';
 
 function Stars({ n }: { n: number }) {
   return (
@@ -29,7 +29,7 @@ function TheoryPickCard({ def, picked, onToggle }: { def: TheoryDef; picked: boo
         picked ? 'border-accent2 bg-accent2/10 shadow-glow' : 'border-white/10 bg-panel hover:border-white/30'
       }`}
     >
-      <img src={def.image} alt={def.name} className="w-full aspect-[16/9] object-cover rounded-md -mt-1" />
+      <CroppedArt src={def.image} alt={def.name} crop={THEORY_ART_CROP} className="w-full rounded-md -mt-1" />
       <div className="flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-wide text-accent2">{def.topic}</span>
         <Stars n={def.stars} />

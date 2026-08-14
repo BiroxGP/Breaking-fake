@@ -1,41 +1,8 @@
 import { Newspaper, X } from 'lucide-react';
 import type { TheoryInstance } from '../types';
-import { TheoryFlavor } from './CardViews';
+import { CroppedArt, NEWS_ART_CROP, THEORY_ART_CROP, TheoryFlavor } from './CardViews';
 import { LEVEL_LABELS, isEffectivelyPrincipale, newsScoreContribution } from '../game/resonanceEffects';
 import { monopolioBonusFor, scoreTheory } from '../game/scoring';
-
-/** The saved card images are photos of the *whole* physical card (title bar, stats, flavor text
- * and all) — the illustration only fills one sub-rectangle of it, and that rectangle sits
- * somewhere different for a Teoria card than for a Notizia card (though it's the same spot across
- * every card of the same type, so one crop box per type works for all of them). `crop` pins that
- * rectangle in source-image pixels, `sourceSize` is the full image's own pixel dimensions — both
- * are needed to size and position the crop correctly regardless of the source's own aspect ratio. */
-interface ArtCrop {
-  sourceSize: { w: number; h: number };
-  box: { x0: number; y0: number; x1: number; y1: number };
-}
-const THEORY_ART_CROP: ArtCrop = { sourceSize: { w: 1417, h: 748 }, box: { x0: 40, y0: 120, x1: 580, y1: 449 } };
-const NEWS_ART_CROP: ArtCrop = { sourceSize: { w: 756, h: 1063 }, box: { x0: 20, y0: 205, x1: 735, y1: 565 } };
-
-function CroppedArt({ src, alt, crop, className }: { src: string; alt: string; crop: ArtCrop; className?: string }) {
-  const { sourceSize, box } = crop;
-  const cropW = box.x1 - box.x0;
-  const cropH = box.y1 - box.y0;
-  return (
-    <div className={`relative overflow-hidden ${className ?? ''}`} style={{ aspectRatio: `${cropW} / ${cropH}` }}>
-      <img
-        src={src}
-        alt={alt}
-        className="absolute grayscale contrast-125 max-w-none"
-        style={{
-          width: `${(sourceSize.w / cropW) * 100}%`,
-          left: `${(-box.x0 / cropW) * 100}%`,
-          top: `${(-box.y0 / cropH) * 100}%`,
-        }}
-      />
-    </div>
-  );
-}
 
 /** Shown every time a Teoria is closed ("mandata in stampa"): a newspaper-clipping recap of the
  * story that theory tells, the News that "confirm" it, and exactly how many PV it earned. */
@@ -73,7 +40,7 @@ export function TheoryPrintout({
               src={theory.def.image}
               alt={theory.def.name}
               crop={THEORY_ART_CROP}
-              className="float-left w-40 sm:w-52 rounded-sm border border-ink/40 shadow mr-4 mb-1"
+              className="float-left w-40 sm:w-52 rounded-sm border border-ink/40 shadow mr-4 mb-1 grayscale contrast-125"
             />
             <h2 className="font-display text-4xl sm:text-5xl leading-[1.05] uppercase">{theory.def.name}</h2>
             <p className="font-serif italic text-xs text-ink/50 mt-0.5">Chiusa da {ownerName}</p>
@@ -94,7 +61,7 @@ export function TheoryPrintout({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {theory.attachedNews.map((n) => (
                     <div key={n.uid} className="flex items-start gap-3 border border-ink/25 rounded-sm overflow-hidden bg-black/[0.02] p-2">
-                      <CroppedArt src={n.def.image} alt={n.def.name} crop={NEWS_ART_CROP} className="w-28 shrink-0 rounded-sm border border-ink/20" />
+                      <CroppedArt src={n.def.image} alt={n.def.name} crop={NEWS_ART_CROP} className="w-28 shrink-0 rounded-sm border border-ink/20 grayscale contrast-125" />
                       <div className="min-w-0">
                         <div className="font-serif font-bold text-sm leading-tight">"{n.def.name}"</div>
                         <div className="text-[11px] text-ink/60 mt-0.5">

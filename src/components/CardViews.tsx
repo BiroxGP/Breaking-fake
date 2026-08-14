@@ -28,6 +28,51 @@ const TYPE_ICON: Record<string, string> = {
   Scopo: '🎯',
 };
 
+/** The saved card images are photos of the *whole* physical card (title bar, stats, flavor text
+ * and all) — the illustration only fills one sub-rectangle of it, at a spot that's consistent
+ * within a card type (Teoria/Notizia/Catalizzatore/Risonanza) but differs across them. `crop`
+ * pins that rectangle in source-image pixels, `sourceSize` is the full image's own pixel
+ * dimensions — both are needed to size and position the crop correctly regardless of the
+ * source's own aspect ratio, so only the artwork itself shows, not a generic slice of the card. */
+export interface ArtCrop {
+  sourceSize: { w: number; h: number };
+  box: { x0: number; y0: number; x1: number; y1: number };
+}
+export const THEORY_ART_CROP: ArtCrop = { sourceSize: { w: 1417, h: 748 }, box: { x0: 40, y0: 120, x1: 580, y1: 449 } };
+export const NEWS_ART_CROP: ArtCrop = { sourceSize: { w: 756, h: 1063 }, box: { x0: 20, y0: 205, x1: 735, y1: 565 } };
+export const CATALYST_ART_CROP: ArtCrop = { sourceSize: { w: 756, h: 1053 }, box: { x0: 30, y0: 100, x1: 726, y1: 715 } };
+export const RESONANCE_ART_CROP: ArtCrop = { sourceSize: { w: 750, h: 1063 }, box: { x0: 25, y0: 200, x1: 700, y1: 660 } };
+
+export function CroppedArt({
+  src,
+  alt,
+  crop,
+  className,
+}: {
+  src: string;
+  alt: string;
+  crop: ArtCrop;
+  className?: string;
+}) {
+  const { sourceSize, box } = crop;
+  const cropW = box.x1 - box.x0;
+  const cropH = box.y1 - box.y0;
+  return (
+    <div className={`relative overflow-hidden ${className ?? ''}`} style={{ aspectRatio: `${cropW} / ${cropH}` }}>
+      <img
+        src={src}
+        alt={alt}
+        className="absolute max-w-none"
+        style={{
+          width: `${(sourceSize.w / cropW) * 100}%`,
+          left: `${(-box.x0 / cropW) * 100}%`,
+          top: `${(-box.y0 / cropH) * 100}%`,
+        }}
+      />
+    </div>
+  );
+}
+
 /** Splits `**marked**` segments out of a Theory's flavor text into highlighted spans — these mark
  * the Catalizzatore names cited in the narrative, for the Coerenza Testuale bonus (+5 PV when the
  * placed Catalizzatore's name matches one of them). */
@@ -110,7 +155,7 @@ export function CatalystCardView({
         </span>
         <span className="text-[10px] font-bold text-gold">{card.def.points}pt</span>
       </div>
-      {!small && <img src={card.def.image} alt={card.def.name} className="w-full aspect-square object-cover" />}
+      {!small && <CroppedArt src={card.def.image} alt={card.def.name} crop={CATALYST_ART_CROP} className="w-full" />}
       <div className="p-2 flex-1 flex flex-col gap-1">
         <Stars n={card.def.stars} />
         <div className="font-display text-base leading-tight text-white">{card.def.name}</div>
@@ -160,7 +205,7 @@ export function NewsCardView({
         </span>
         <span className="text-[10px] font-bold text-white">{points}pt</span>
       </div>
-      {!small && <img src={card.def.image} alt={card.def.name} className="w-full aspect-[4/3] object-cover" />}
+      {!small && <CroppedArt src={card.def.image} alt={card.def.name} crop={NEWS_ART_CROP} className="w-full" />}
       <div className="p-2 flex-1 flex flex-col gap-1">
         <span className="text-[9px] text-accent2 font-bold uppercase tracking-wide">
           {LEVEL_LABELS[card.level]}
@@ -203,7 +248,7 @@ export function ResonanceCardView({
       disabled={!onClick}
     >
       <div className="relative">
-        <img src={card.def.image} alt={card.def.name} className="w-full aspect-[3/4] object-cover" />
+        <CroppedArt src={card.def.image} alt={card.def.name} crop={RESONANCE_ART_CROP} className="w-full" />
         <span
           className={`absolute top-1 right-1 text-[8px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-0.5 ${
             card.def.type === 'Reazione' ? 'bg-gold text-black' : 'bg-accent2 text-black'
@@ -292,7 +337,7 @@ export function TheoryCardView({
           <span className="text-gold font-bold">{theory.def.basePV}pt</span>
         </span>
       </div>
-      <img src={theory.def.image} alt={theory.def.name} className="w-full aspect-[16/9] object-cover" />
+      <CroppedArt src={theory.def.image} alt={theory.def.name} crop={THEORY_ART_CROP} className="w-full" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
         <TheoryFlavor
