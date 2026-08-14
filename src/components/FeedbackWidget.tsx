@@ -4,9 +4,8 @@ import { supabase } from '../lib/supabase';
 
 const STORAGE_KEY = 'breaking-fake-feedback-submitted';
 
-// TODO: swap in the real Instagram profile URL once it exists.
 const SOCIAL_LINKS = {
-  instagram: '#',
+  instagram: 'https://www.instagram.com/breakingfake.boardgame/',
   facebook: 'https://www.facebook.com/1305761112613079',
 };
 
