@@ -87,11 +87,15 @@ interface ActionResult {
   error?: string;
 }
 
+const TUTORIAL_AUTO_SHOWN_KEY = 'breaking-fake-tutorial-auto-shown';
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [state, setState] = useState<GameState | null>(null);
   const [showRules, setShowRules] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [tutorialActive, setTutorialActive] = useState(false);
+  const [tutorialSeen, setTutorialSeen] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!state) return;
@@ -133,6 +137,11 @@ export default function App() {
     const game = initDraft(createGame(configs));
     setState(game);
     setScreen('game');
+    setTutorialSeen(new Set());
+    if (!localStorage.getItem(TUTORIAL_AUTO_SHOWN_KEY)) {
+      setTutorialActive(true);
+      localStorage.setItem(TUTORIAL_AUTO_SHOWN_KEY, '1');
+    }
   };
 
   const restart = () => {
@@ -232,8 +241,20 @@ export default function App() {
         }
         onDismissPrintout={() => withState((s) => dismissPrintout(s))}
         onEndGame={restart}
+        tutorialActive={tutorialActive}
+        onToggleTutorial={() => setTutorialActive((a) => !a)}
+        tutorialSeen={tutorialSeen}
+        onMarkTutorialStep={(id) => setTutorialSeen((prev) => new Set(prev).add(id))}
       />
-      {showRules && <RulesModal onClose={() => setShowRules(false)} />}
+      {showRules && (
+        <RulesModal
+          onClose={() => setShowRules(false)}
+          onActivateTutorial={() => {
+            setTutorialActive(true);
+            setShowRules(false);
+          }}
+        />
+      )}
     </>
   );
 }

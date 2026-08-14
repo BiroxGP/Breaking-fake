@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
+import { BookOpen, GraduationCap, ListChecks, LogOut, ScrollText, Zap } from 'lucide-react';
 import type { GameState, HandCard } from '../types';
 import { Hotseat } from './Hotseat';
 import { ClearOnChange, HoverPreviewProvider } from './HoverPreview';
@@ -10,6 +10,7 @@ import { canAttachNewsToTheory } from '../game/resonanceEffects';
 import { findApplicableTheories } from '../game/targeting';
 import { computeScores } from '../game/scoring';
 import { TheoryPrintout } from './TheoryPrintout';
+import { TutorialOverlay } from './Tutorial';
 
 type ImmediateTarget = { theoryUid: string; newsUid: string };
 
@@ -30,6 +31,10 @@ interface Props {
   actionError: string | null;
   onDismissError: () => void;
   onDismissPrintout: () => void;
+  tutorialActive: boolean;
+  onToggleTutorial: () => void;
+  tutorialSeen: Set<string>;
+  onMarkTutorialStep: (id: string) => void;
 }
 
 export function GameScreen(props: Props) {
@@ -57,6 +62,8 @@ export function GameScreen(props: Props) {
           onShowRules={props.onShowRules}
           onToggleLog={() => setShowLog((s) => !s)}
           onRequestEndGame={() => setShowEndConfirm(true)}
+          tutorialActive={props.tutorialActive}
+          onToggleTutorial={props.onToggleTutorial}
         />
 
         {state.pendingRecycle ? (
@@ -131,6 +138,13 @@ export function GameScreen(props: Props) {
           />
         )}
       </div>
+      <TutorialOverlay
+        active={props.tutorialActive}
+        state={state}
+        seenSteps={props.tutorialSeen}
+        onMarkSeen={props.onMarkTutorialStep}
+        onDisable={props.onToggleTutorial}
+      />
     </HoverPreviewProvider>
   );
 }
@@ -155,11 +169,15 @@ function TopBar({
   onShowRules,
   onToggleLog,
   onRequestEndGame,
+  tutorialActive,
+  onToggleTutorial,
 }: {
   state: GameState;
   onShowRules: () => void;
   onToggleLog: () => void;
   onRequestEndGame: () => void;
+  tutorialActive: boolean;
+  onToggleTutorial: () => void;
 }) {
   const scores = computeScores(state);
   const cpId = state.players[state.currentPlayerIndex].id;
@@ -177,6 +195,13 @@ function TopBar({
           )}
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={onToggleTutorial}
+            className={`p-2 rounded-md hover:bg-white/10 ${tutorialActive ? 'text-accent2' : 'text-white/70'}`}
+            title={tutorialActive ? 'Disattiva il Tutorial guidato' : 'Attiva il Tutorial guidato'}
+          >
+            <GraduationCap size={18} />
+          </button>
           <button onClick={onToggleLog} className="p-2 rounded-md hover:bg-white/10 text-white/70">
             <ScrollText size={18} />
           </button>
@@ -192,7 +217,7 @@ function TopBar({
           </button>
         </div>
       </div>
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center gap-1.5 flex-wrap" data-tutorial="scores">
         {state.players.map((p) => (
           <span
             key={p.id}
@@ -280,7 +305,7 @@ function DrawChooser({ onDraw }: { onDraw: (c: number, n: number) => void }) {
       <p className="text-white/50 text-sm max-w-sm text-center">
         Scegli come dividere le tue 2 carte pescate. Riceverai comunque 1 Risonanza gratuita.
       </p>
-      <div className="flex gap-3 flex-wrap justify-center">
+      <div className="flex gap-3 flex-wrap justify-center" data-tutorial="draw-phase">
         <button onClick={() => onDraw(2, 0)} className="px-5 py-3 rounded-xl bg-panel2 border border-white/10 hover:border-accent2 text-white">
           2 Catalizzatori
         </button>
@@ -358,13 +383,14 @@ function MainBoard(props: Props) {
       <div className="flex items-center justify-between mt-3 mb-2">
         <div className="text-white font-display text-2xl">{cp.name}</div>
         <div className="flex items-center gap-3">
-          <span className="text-xs text-white/50 flex items-center gap-1">
+          <span className="text-xs text-white/50 flex items-center gap-1" data-tutorial="actions-counter">
             <Zap size={13} className="text-gold" />
             Su te stesso: {state.selfActionUsed ? 'usata' : 'disponibile'} · Su avversario:{' '}
             {state.opponentActionUsed ? 'usata' : 'disponibile'}
           </span>
           <button
             onClick={props.onEndTurn}
+            data-tutorial="end-turn"
             className="px-4 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-sm font-bold"
           >
             Fine Turno
@@ -372,7 +398,7 @@ function MainBoard(props: Props) {
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-6" data-tutorial="hand">
         <div className="text-white/40 text-xs uppercase tracking-widest mb-1">
           La tua mano ({cp.hand.length}/10) {selected && '— seleziona una Teoria bersaglio, o clicca di nuovo la carta per deselezionare'}
         </div>
@@ -405,7 +431,7 @@ function MainBoard(props: Props) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[{ player: cp, isOwn: true }, ...others.map((opp) => ({ player: opp, isOwn: false }))].map(({ player, isOwn }) => (
-          <div key={player.id}>
+          <div key={player.id} data-tutorial={isOwn ? 'own-theories' : undefined}>
             <div className={`text-xs uppercase tracking-widest mb-1 ${isOwn ? 'text-accent2' : 'text-white/40'}`}>
               {isOwn ? 'Le tue Teorie' : `${player.name} (avversario)`}
             </div>
@@ -555,7 +581,7 @@ function ReactionPanel({
   const isOwnTheory = reactor.id === pr.theoryOwnerId;
 
   return (
-    <div className="flex flex-col items-center gap-4 py-10 px-4">
+    <div className="flex flex-col items-center gap-4 py-10 px-4" data-tutorial="reaction-window">
       <h3 className="font-display text-3xl text-white text-center">Finestra di Reazione</h3>
       <p className="text-white/50 text-sm text-center max-w-md">
         <strong className="text-accent2">{placer?.name}</strong> ha collegato la notizia{' '}

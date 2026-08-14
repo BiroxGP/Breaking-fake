@@ -1,6 +1,12 @@
-import { X } from 'lucide-react';
+import { GraduationCap, X } from 'lucide-react';
 
-export function RulesModal({ onClose }: { onClose: () => void }) {
+export function RulesModal({
+  onClose,
+  onActivateTutorial,
+}: {
+  onClose: () => void;
+  onActivateTutorial?: () => void;
+}) {
   return (
     <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
       <div className="bg-panel border border-white/10 rounded-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 relative">
@@ -12,6 +18,16 @@ export function RulesModal({ onClose }: { onClose: () => void }) {
           <X size={20} />
         </button>
         <h2 className="font-display text-3xl text-white mb-4">Regolamento in breve</h2>
+
+        {onActivateTutorial && (
+          <button
+            type="button"
+            onClick={onActivateTutorial}
+            className="mb-5 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-accent2/15 border border-accent2/40 text-accent2 text-sm font-bold hover:bg-accent2/25"
+          >
+            <GraduationCap size={16} /> Preferisci imparare giocando? Attiva il Tutorial guidato
+          </button>
+        )}
 
         <Section title="Obiettivo">
           Chiudi 3 Teorie del Complotto piazzando Catalizzatori e Notizie. La partita finisce non appena un
