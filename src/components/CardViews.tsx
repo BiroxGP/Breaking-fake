@@ -283,7 +283,7 @@ export function TheoryCardView({
     <div
       className={`rounded-xl border ${
         theory.closed ? 'border-gold/60' : 'border-white/10'
-      } bg-panel overflow-hidden flex flex-col w-52 shrink-0 ${theory.closed ? 'opacity-90' : ''}`}
+      } bg-panel overflow-hidden flex flex-col w-60 shrink-0 ${theory.closed ? 'opacity-90' : ''}`}
     >
       <div className="bg-gradient-to-r from-panel2 to-ink px-2 py-1.5 flex items-center justify-between">
         <span className="text-[10px] uppercase tracking-wide text-accent2">{theory.def.topic}</span>

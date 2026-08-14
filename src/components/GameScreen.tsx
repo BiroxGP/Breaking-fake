@@ -410,39 +410,21 @@ function MainBoard(props: Props) {
         </p>
       </div>
 
-      <div className="mb-4">
-        <div className="text-accent2 text-xs uppercase tracking-widest mb-1">Le tue Teorie</div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {cp.theories.map((t) => (
-            <TheoryCardView
-              key={t.uid}
-              theory={t}
-              isOwn
-              onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
-              onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
-              onCloseClick={() => props.onCloseTheory(t.uid)}
-              onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
-              isNewsTargetable={(n) => !n.lockedByVerification}
-              highlightSlotA={canTargetSlot(t.uid, 'slotA')}
-              highlightSlotB={canTargetSlot(t.uid, 'slotB')}
-              highlightAttach={selected?.kind === 'news' && canTargetAttach(t.uid)}
-            />
-          ))}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {others.map((opp) => (
-          <div key={opp.id} className={others.length === 1 ? 'sm:col-span-2' : ''}>
-            <div className="text-white/40 text-xs uppercase tracking-widest mb-1">{opp.name} (avversario)</div>
+        {[{ player: cp, isOwn: true }, ...others.map((opp) => ({ player: opp, isOwn: false }))].map(({ player, isOwn }) => (
+          <div key={player.id}>
+            <div className={`text-xs uppercase tracking-widest mb-1 ${isOwn ? 'text-accent2' : 'text-white/40'}`}>
+              {isOwn ? 'Le tue Teorie' : `${player.name} (avversario)`}
+            </div>
             <div className="flex gap-3 overflow-x-auto pb-2">
-              {opp.theories.map((t) => (
+              {player.theories.map((t) => (
                 <TheoryCardView
                   key={t.uid}
                   theory={t}
-                  isOwn={false}
+                  isOwn={isOwn}
                   onSlotClick={selected?.kind === 'catalyst' ? (slot) => handleSlotClick(t.uid, slot) : undefined}
                   onAttachClick={selected?.kind === 'news' ? () => handleAttachClick(t.uid) : undefined}
+                  onCloseClick={isOwn ? () => props.onCloseTheory(t.uid) : undefined}
                   onNewsClick={canTargetNews() ? (newsUid) => handleNewsClick(t.uid, newsUid) : undefined}
                   isNewsTargetable={(n) => !n.lockedByVerification}
                   highlightSlotA={canTargetSlot(t.uid, 'slotA')}
