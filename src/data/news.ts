@@ -77,7 +77,7 @@ export const NEWS: NewsDef[] = [
     flavor: "Ritrovate pergamene in Argentina che descrivono un piano di riscossa politica datato 1960, firmato con un nome che scuote la comunità storica." },
   { id: 'sosia-di-stato', name: 'Sosia di Stato', startLevel: 'Virale', points: 4, categoriaPrincipale: 'Nuovo Ordine Mondiale', categoriaSecondaria: 'Controllo sulle Masse', image: img('sosia-di-stato'),
     flavor: "Un politico influente viene visto con una cicatrice che il giorno prima non aveva. Analisti del volto giurano che si tratti di una persona diversa." },
-  { id: 'il-sosia', name: 'Il Sosia', startLevel: 'Popolare', points: 3, categoriaPrincipale: 'Misteri e Leggende', categoriaSecondaria: 'Personaggi Storici Ancora Vivi', image: img('il-sosia'),
+  { id: 'il-sosia', name: 'Il Sosia', startLevel: 'Popolare', points: 3, categoriaPrincipale: 'Personaggi Storici Ancora Vivi', categoriaSecondaria: 'Misteri e Leggende', image: img('il-sosia'),
     flavor: "Indizi sonori nelle registrazioni originali di un gruppo famoso suggeriscono che la voce del cantante sia cambiata drasticamente dopo un presunto incidente d'auto." },
   { id: 'immortale-di-parigi', name: "L'Immortale di Parigi", startLevel: 'Emergente', points: 2, categoriaPrincipale: 'Personaggi Storici Ancora Vivi', categoriaSecondaria: 'Teoria della Simulazione', image: img('immortale-di-parigi'),
     flavor: "Foto d'archivio mostrano lo stesso cameriere in un caffè parigino nel 1890, nel 1950 e oggi, senza che sia invecchiato di un solo giorno." },
