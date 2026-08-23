@@ -117,13 +117,13 @@ const TABLOID_QUOTES: ((a: string, b: string) => string)[] = [
   (a, b) => `Un indizio, un solo indizio: **${a}**. E un obiettivo tutt'altro che nascosto: **${b}**.`,
   (a, b) => `Nessuna coincidenza è mai stata così sospetta: **${a}**. Il perché lo spiega tutto **${b}**.`,
   (a, b) => `Basta seguire il denaro, o quel che ne resta: **${a}**. Il piano dietro le quinte: **${b}**.`,
+  (a, b) => `Le testimonianze concordano su un punto: **${a}**. Il fine ultimo, purtroppo, è **${b}**.`,
+  (a, b) => `C'è chi giura di aver visto tutto con i propri occhi: **${a}**. Il disegno più grande? **${b}**.`,
+  (a, b) => `Una cosa è certa, secondo gli esperti (auto-proclamati): **${a}**. Il resto: **${b}**.`,
+  (a, b) => `Gli scettici non hanno spiegazioni migliori: **${a}**. L'agenda nascosta, se esiste, è **${b}**.`,
+  (a, b) => `Ogni pista, prima o poi, torna lì: **${a}**. E dietro l'angolo aspetta **${b}**.`,
+  (a, b) => `Non ci vuole un genio per capirlo: **${a}**. Il vero obiettivo, tra le righe: **${b}**.`,
 ];
-
-function stableIndex(seed: string, length: number): number {
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
-  return Math.abs(hash) % length;
-}
 
 /** A Teoria's flavor text is written around one specific example pair of Catalizzatori — but any
  * Catalizzatore of the right type can actually be placed there. Left as-is, every Teoria built
@@ -131,7 +131,10 @@ function stableIndex(seed: string, length: number): number {
  * game's real combinatorial variety. When both placed Catalizzatori match that example exactly,
  * the hand-written sentence is used verbatim (it's guaranteed to read well); otherwise the citing
  * sentence is replaced with one of the tabloid stand-ins above, naming whichever Catalizzatori
- * were actually placed — picked deterministically per Teoria so it doesn't shuffle on re-render. */
+ * were actually placed. Which stand-in is picked comes from `flavorVariant`, a random number
+ * rolled once when the Teoria was drafted — not derived from `uid`, whose sequential counter
+ * ("theory-1", "theory-2", ...) hashed into an almost-linear, barely-varying cycle through the
+ * list instead of a real spread. */
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
   const matchesA = !testuale[0] || theory.slotA.filled?.def.id === testuale[0];
@@ -143,7 +146,7 @@ export function personalizedFlavor(theory: TheoryInstance): string {
   if (!nameA || !nameB) return flavor;
 
   const { description } = splitFlavor(flavor);
-  const template = TABLOID_QUOTES[stableIndex(theory.uid, TABLOID_QUOTES.length)];
+  const template = TABLOID_QUOTES[theory.flavorVariant % TABLOID_QUOTES.length];
   const quote = template(nameA, nameB);
   return description ? `${description} ${quote}` : quote;
 }

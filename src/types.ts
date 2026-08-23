@@ -130,6 +130,11 @@ export interface TheoryInstance {
   closed: boolean;
   closeOrder: number | null;
   extraNewsRequired: number;
+  /** Picked once when the Teoria is drafted, so which tabloid stand-in sentence it gets (when the
+   * placed Catalizzatori aren't the exact example pair) is genuinely random but stays fixed
+   * across re-renders — rather than derived from `uid`, whose sequential counter produced a
+   * near-cyclic, barely-varying pick. */
+  flavorVariant: number;
 }
 
 export interface Player {
