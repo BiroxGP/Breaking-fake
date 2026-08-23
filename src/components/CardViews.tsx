@@ -104,6 +104,25 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
   return { description: flavor.slice(0, sentenceEnd + 1).trim(), quote: flavor.slice(sentenceEnd + 2).trim() };
 }
 
+/** Short "headline" lead-ins naming the Teoria itself, prepended to a tabloid quote so it doesn't
+ * read as generic Mad-Libs disconnected from what's actually being investigated. Each treats the
+ * Teoria's name as a bare proper-noun-style label (never preceded by an article), so — just like
+ * the Catalizzatore names below — it reads fine no matter the name's own gender or number. */
+const TABLOID_LEAD_INS: ((t: string) => string)[] = [
+  (t) => `Il caso **${t}**.`,
+  (t) => `Il dossier si chiama **${t}**.`,
+  (t) => `Tutto parte da **${t}**.`,
+  (t) => `Argomento del giorno: **${t}**.`,
+  (t) => `Si parla ancora di **${t}**.`,
+  (t) => `Riaperto il caso **${t}**.`,
+  (t) => `Nuovi sviluppi su **${t}**.`,
+  (t) => `Il titolo dice tutto: **${t}**.`,
+  (t) => `Ancora **${t}**, ancora domande.`,
+  (t) => `Il fascicolo **${t}** si allunga.`,
+  (t) => `Non si placano le voci su **${t}**.`,
+  (t) => `Torna a far parlare di sé **${t}**.`,
+];
+
 /** Tabloid-style stand-ins for a Teoria's hand-written citing sentence, used whenever the actual
  * Catalizzatori placed aren't the exact pair the sentence was written around. Deliberately built
  * on colon/copula framings ("Il nome che circola: X.") rather than prepositions or adjectives, so
@@ -146,8 +165,9 @@ export function personalizedFlavor(theory: TheoryInstance): string {
   if (!nameA || !nameB) return flavor;
 
   const { description } = splitFlavor(flavor);
-  const template = TABLOID_QUOTES[theory.flavorVariant % TABLOID_QUOTES.length];
-  const quote = template(nameA, nameB);
+  const leadIn = TABLOID_LEAD_INS[theory.flavorVariant % TABLOID_LEAD_INS.length];
+  const quoteTemplate = TABLOID_QUOTES[Math.floor(theory.flavorVariant / TABLOID_LEAD_INS.length) % TABLOID_QUOTES.length];
+  const quote = `${leadIn(theory.def.name)} ${quoteTemplate(nameA, nameB)}`;
   return description ? `${description} ${quote}` : quote;
 }
 
