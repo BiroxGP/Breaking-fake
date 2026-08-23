@@ -118,7 +118,11 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
   let idx = 0;
-  return flavor.replace(/(\S+\s+)?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
+  // The word right before "**" is either space-separated ("Il **Governo**") or, for an elided
+  // article, directly attached with no space at all ("Nell'**Area 51**") — the two alternatives
+  // below catch each case; a plain preposition or verb with no article matches neither and is
+  // left as undefined, same as before.
+  return flavor.replace(/((?:\S+\s+)|(?:\S*['’]))?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
     const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
     const testId = testuale[idx];
     idx += 1;
@@ -129,7 +133,10 @@ export function personalizedFlavor(theory: TheoryInstance): string {
     if (prefix) {
       const word = prefix.trim();
       const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
-      if (reagreed) newPrefix = prefix.replace(word, reagreed);
+      // Rebuilt from scratch rather than patched in place: whether a space belongs before "**"
+      // depends on the *new* article, not the old one — "un'" (elided) attaches directly, "un"
+      // needs a space, and swapping between the two (e.g. "Nell'" -> "Nelle") changes which.
+      if (reagreed) newPrefix = reagreed.endsWith("'") ? reagreed : `${reagreed} `;
     }
     return `${newPrefix}**${newDef.name}**`;
   });

@@ -21,9 +21,15 @@ export function definiteArticleFor(name: string, gender: Gender, plural?: boolea
   return impure ? 'lo' : vowel ? "l'" : 'il';
 }
 
-export function indefiniteArticleFor(name: string, gender: Gender): string {
+export function indefiniteArticleFor(name: string, gender: Gender, plural?: boolean): string {
   const vowel = startsWithVowelSound(name);
   const impure = startsWithImpureCluster(name);
+  // Italian has no true indefinite plural article ("un/una" only exist singular) — "delle Tracce
+  // Isotopiche" ("some Isotopic Traces") is how "un/una" naturally extends to a plural noun.
+  if (plural) {
+    if (gender === 'f') return 'delle';
+    return vowel || impure ? 'degli' : 'dei';
+  }
   if (gender === 'f') return vowel ? "un'" : 'una';
   return impure ? 'uno' : 'un';
 }
@@ -73,7 +79,7 @@ export function reagreeArticle(word: string, name: string, gender: Gender, plura
   if (!parsed) return null;
   const rebuilt =
     parsed.kind === 'indef'
-      ? indefiniteArticleFor(name, gender)
+      ? indefiniteArticleFor(name, gender, plural)
       : parsed.prep
         ? PREP_FUSION[parsed.prep][definiteArticleFor(name, gender, plural)]
         : definiteArticleFor(name, gender, plural);
