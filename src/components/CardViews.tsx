@@ -367,8 +367,6 @@ export function TheoryCardView({
   highlightSlotB?: boolean;
   highlightAttach?: boolean;
   isNewsTargetable?: (news: NewsInstance) => boolean;
-  /** Full, untruncated flavor text — used for the magnified preview where clipping defeats the purpose. */
-  fullText?: boolean;
 }) {
   const closeable = !theory.closed && canCloseTheory(theory);
   const cardEl = (
@@ -389,8 +387,8 @@ export function TheoryCardView({
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
         <TheoryFlavor
           flavor={personalizedFlavor(theory)}
-          descClassName={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-2'}`}
-          quoteClassName={`text-[9px] text-white/40 leading-snug mt-1 ${fullText ? '' : 'line-clamp-2'}`}
+          descClassName="text-[10px] text-white/50 leading-snug mt-0.5"
+          quoteClassName="text-[9px] text-white/40 leading-snug mt-1"
         />
       </div>
 
@@ -494,7 +492,7 @@ export function TheoryCardView({
     </div>
   );
   return (
-    <Magnify preview={<TheoryCardView theory={theory} isOwn={isOwn} fullText />} className="shrink-0">
+    <Magnify preview={<TheoryCardView theory={theory} isOwn={isOwn} />} className="shrink-0">
       {cardEl}
     </Magnify>
   );
