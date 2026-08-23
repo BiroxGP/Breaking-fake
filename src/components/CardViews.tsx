@@ -9,7 +9,6 @@ import {
   newsScoreContribution,
 } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
-import { reagreeArticle } from '../game/italianArticles';
 import { Magnify } from './HoverPreview';
 
 function Stars({ n }: { n: number }) {
@@ -105,31 +104,48 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
   return { description: flavor.slice(0, sentenceEnd + 1).trim(), quote: flavor.slice(sentenceEnd + 2).trim() };
 }
 
-/** A Theory's flavor text is written around one specific example pair of Catalizzatori (the two
- * `**bold**` names, in slotA/slotB order) — but any Catalizzatore of the right type can actually
- * be placed there. Left as-is, every Teoria built with a different pair still reads as if you'd
- * used the example one, which undersells the game's real combinatorial variety. This swaps each
- * bold name for whichever Catalizzatore was actually placed in that slot, whenever the two
- * differ — only where `testuale` confirms that bold span really is a Catalizzatore reference (the
- * couple of Teorie with an unresolved `null` marker are left untouched). */
+/** Tabloid-style stand-ins for a Teoria's hand-written citing sentence, used whenever the actual
+ * Catalizzatori placed aren't the exact pair the sentence was written around. Deliberately built
+ * on colon/copula framings ("Il nome che circola: X.") rather than prepositions or adjectives, so
+ * they read fine no matter the Catalizzatore's gender, number, or whether its name is a noun
+ * ("Cancellazione Identitaria") or a verb phrase ("Preparare il Contatto") — sidestepping the
+ * agreement mismatches a literal word-for-word substitution kept producing. */
+const TABLOID_QUOTES: ((a: string, b: string) => string)[] = [
+  (a, b) => `Il nome che tutti sussurrano: **${a}**. Lo scopo, a quanto pare: **${b}**.`,
+  (a, b) => `Fonti interne fanno un solo nome: **${a}**. Il movente ipotizzato: **${b}**.`,
+  (a, b) => `Le prove — poche, ma inequivocabili — portano dritte a questo: **${a}**. Dietro, si dice, ci sarebbe **${b}**.`,
+  (a, b) => `Un indizio, un solo indizio: **${a}**. E un obiettivo tutt'altro che nascosto: **${b}**.`,
+  (a, b) => `Nessuna coincidenza è mai stata così sospetta: **${a}**. Il perché lo spiega tutto **${b}**.`,
+  (a, b) => `Basta seguire il denaro, o quel che ne resta: **${a}**. Il piano dietro le quinte: **${b}**.`,
+];
+
+function stableIndex(seed: string, length: number): number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) hash = (hash * 31 + seed.charCodeAt(i)) | 0;
+  return Math.abs(hash) % length;
+}
+
+/** A Teoria's flavor text is written around one specific example pair of Catalizzatori — but any
+ * Catalizzatore of the right type can actually be placed there. Left as-is, every Teoria built
+ * with a different pair still reads as if you'd used the example one, which undersells the
+ * game's real combinatorial variety. When both placed Catalizzatori match that example exactly,
+ * the hand-written sentence is used verbatim (it's guaranteed to read well); otherwise the citing
+ * sentence is replaced with one of the tabloid stand-ins above, naming whichever Catalizzatori
+ * were actually placed — picked deterministically per Teoria so it doesn't shuffle on re-render. */
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
-  let idx = 0;
-  return flavor.replace(/(\S+\s+)?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
-    const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
-    const testId = testuale[idx];
-    idx += 1;
-    if (!testId || !slot?.filled || slot.filled.def.name === inner) return match;
+  const matchesA = !testuale[0] || theory.slotA.filled?.def.id === testuale[0];
+  const matchesB = !testuale[1] || theory.slotB.filled?.def.id === testuale[1];
+  if (matchesA && matchesB) return flavor;
 
-    const newDef = slot.filled.def;
-    let newPrefix = prefix ?? '';
-    if (prefix) {
-      const word = prefix.trim();
-      const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
-      if (reagreed) newPrefix = prefix.replace(word, reagreed);
-    }
-    return `${newPrefix}**${newDef.name}**`;
-  });
+  const nameA = theory.slotA.filled?.def.name;
+  const nameB = theory.slotB.filled?.def.name;
+  if (!nameA || !nameB) return flavor;
+
+  const { description } = splitFlavor(flavor);
+  const template = TABLOID_QUOTES[stableIndex(theory.uid, TABLOID_QUOTES.length)];
+  const quote = template(nameA, nameB);
+  return description ? `${description} ${quote}` : quote;
 }
 
 /** Renders a Theory's flavor as a general description line, followed on its own line by the
