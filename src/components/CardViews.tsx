@@ -9,6 +9,7 @@ import {
   newsScoreContribution,
 } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
+import { reagreeArticle } from '../game/italianArticles';
 import { Magnify } from './HoverPreview';
 
 function Stars({ n }: { n: number }) {
@@ -114,14 +115,20 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
   let idx = 0;
-  return flavor.replace(/\*\*(.+?)\*\*/g, (match, inner: string) => {
+  return flavor.replace(/(\S+\s+)?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
     const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
     const testId = testuale[idx];
     idx += 1;
-    if (testId && slot?.filled && slot.filled.def.name !== inner) {
-      return `**${slot.filled.def.name}**`;
+    if (!testId || !slot?.filled || slot.filled.def.name === inner) return match;
+
+    const newDef = slot.filled.def;
+    let newPrefix = prefix ?? '';
+    if (prefix) {
+      const word = prefix.trim();
+      const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
+      if (reagreed) newPrefix = prefix.replace(word, reagreed);
     }
-    return match;
+    return `${newPrefix}**${newDef.name}**`;
   });
 }
 

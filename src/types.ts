@@ -48,6 +48,11 @@ export interface CatalystDef {
   points: number;
   flavor: string;
   image: string;
+  /** Grammatical gender/number of the name's head noun, e.g. "Fondazione Occulta" is f/singular
+   * and "Rettiliani Infiltrati" is m/plural — used to pick the right article when a Teoria's
+   * flavor text substitutes in whichever Catalizzatore was actually placed. */
+  gender: 'm' | 'f';
+  plural?: boolean;
 }
 
 export interface NewsDef {
