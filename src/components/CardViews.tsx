@@ -104,6 +104,27 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
   return { description: flavor.slice(0, sentenceEnd + 1).trim(), quote: flavor.slice(sentenceEnd + 2).trim() };
 }
 
+/** A Theory's flavor text is written around one specific example pair of Catalizzatori (the two
+ * `**bold**` names, in slotA/slotB order) — but any Catalizzatore of the right type can actually
+ * be placed there. Left as-is, every Teoria built with a different pair still reads as if you'd
+ * used the example one, which undersells the game's real combinatorial variety. This swaps each
+ * bold name for whichever Catalizzatore was actually placed in that slot, whenever the two
+ * differ — only where `testuale` confirms that bold span really is a Catalizzatore reference (the
+ * couple of Teorie with an unresolved `null` marker are left untouched). */
+export function personalizedFlavor(theory: TheoryInstance): string {
+  const { flavor, testuale } = theory.def;
+  let idx = 0;
+  return flavor.replace(/\*\*(.+?)\*\*/g, (match, inner: string) => {
+    const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
+    const testId = testuale[idx];
+    idx += 1;
+    if (testId && slot?.filled && slot.filled.def.name !== inner) {
+      return `**${slot.filled.def.name}**`;
+    }
+    return match;
+  });
+}
+
 /** Renders a Theory's flavor as a general description line, followed on its own line by the
  * catalyst-citing sentence — quoted and in italics, smaller than the description — since that's
  * the part the Coerenza Testuale bonus actually checks against the placed Catalizzatore's name. */
@@ -341,7 +362,7 @@ export function TheoryCardView({
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>
         <TheoryFlavor
-          flavor={theory.def.flavor}
+          flavor={personalizedFlavor(theory)}
           descClassName={`text-[10px] text-white/50 leading-snug mt-0.5 ${fullText ? '' : 'line-clamp-2'}`}
           quoteClassName={`text-[9px] text-white/40 leading-snug mt-1 ${fullText ? '' : 'line-clamp-2'}`}
         />
