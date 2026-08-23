@@ -9,6 +9,7 @@ import {
   newsScoreContribution,
 } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
+import { reagreeArticle } from '../game/italianArticles';
 import { Magnify } from './HoverPreview';
 
 function Stars({ n }: { n: number }) {
@@ -104,71 +105,34 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
   return { description: flavor.slice(0, sentenceEnd + 1).trim(), quote: flavor.slice(sentenceEnd + 2).trim() };
 }
 
-/** Short "headline" lead-ins naming the Teoria itself, prepended to a tabloid quote so it doesn't
- * read as generic Mad-Libs disconnected from what's actually being investigated. Each treats the
- * Teoria's name as a bare proper-noun-style label (never preceded by an article), so — just like
- * the Catalizzatore names below — it reads fine no matter the name's own gender or number. */
-const TABLOID_LEAD_INS: ((t: string) => string)[] = [
-  (t) => `Il caso **${t}**.`,
-  (t) => `Il dossier si chiama **${t}**.`,
-  (t) => `Tutto parte da **${t}**.`,
-  (t) => `Argomento del giorno: **${t}**.`,
-  (t) => `Si parla ancora di **${t}**.`,
-  (t) => `Riaperto il caso **${t}**.`,
-  (t) => `Nuovi sviluppi su **${t}**.`,
-  (t) => `Il titolo dice tutto: **${t}**.`,
-  (t) => `Ancora **${t}**, ancora domande.`,
-  (t) => `Il fascicolo **${t}** si allunga.`,
-  (t) => `Non si placano le voci su **${t}**.`,
-  (t) => `Torna a far parlare di sé **${t}**.`,
-];
-
-/** Tabloid-style stand-ins for a Teoria's hand-written citing sentence, used whenever the actual
- * Catalizzatori placed aren't the exact pair the sentence was written around. Deliberately built
- * on colon/copula framings ("Il nome che circola: X.") rather than prepositions or adjectives, so
- * they read fine no matter the Catalizzatore's gender, number, or whether its name is a noun
- * ("Cancellazione Identitaria") or a verb phrase ("Preparare il Contatto") — sidestepping the
- * agreement mismatches a literal word-for-word substitution kept producing. */
-const TABLOID_QUOTES: ((a: string, b: string) => string)[] = [
-  (a, b) => `Il nome che tutti sussurrano: **${a}**. Lo scopo, a quanto pare: **${b}**.`,
-  (a, b) => `Fonti interne fanno un solo nome: **${a}**. Il movente ipotizzato: **${b}**.`,
-  (a, b) => `Le prove — poche, ma inequivocabili — portano dritte a questo: **${a}**. Dietro, si dice, ci sarebbe **${b}**.`,
-  (a, b) => `Un indizio, un solo indizio: **${a}**. E un obiettivo tutt'altro che nascosto: **${b}**.`,
-  (a, b) => `Nessuna coincidenza è mai stata così sospetta: **${a}**. Il perché lo spiega tutto **${b}**.`,
-  (a, b) => `Basta seguire il denaro, o quel che ne resta: **${a}**. Il piano dietro le quinte: **${b}**.`,
-  (a, b) => `Le testimonianze concordano su un punto: **${a}**. Il fine ultimo, purtroppo, è **${b}**.`,
-  (a, b) => `C'è chi giura di aver visto tutto con i propri occhi: **${a}**. Il disegno più grande? **${b}**.`,
-  (a, b) => `Una cosa è certa, secondo gli esperti (auto-proclamati): **${a}**. Il resto: **${b}**.`,
-  (a, b) => `Gli scettici non hanno spiegazioni migliori: **${a}**. L'agenda nascosta, se esiste, è **${b}**.`,
-  (a, b) => `Ogni pista, prima o poi, torna lì: **${a}**. E dietro l'angolo aspetta **${b}**.`,
-  (a, b) => `Non ci vuole un genio per capirlo: **${a}**. Il vero obiettivo, tra le righe: **${b}**.`,
-];
-
-/** A Teoria's flavor text is written around one specific example pair of Catalizzatori — but any
- * Catalizzatore of the right type can actually be placed there. Left as-is, every Teoria built
- * with a different pair still reads as if you'd used the example one, which undersells the
- * game's real combinatorial variety. When both placed Catalizzatori match that example exactly,
- * the hand-written sentence is used verbatim (it's guaranteed to read well); otherwise the citing
- * sentence is replaced with one of the tabloid stand-ins above, naming whichever Catalizzatori
- * were actually placed. Which stand-in is picked comes from `flavorVariant`, a random number
- * rolled once when the Teoria was drafted — not derived from `uid`, whose sequential counter
- * ("theory-1", "theory-2", ...) hashed into an almost-linear, barely-varying cycle through the
- * list instead of a real spread. */
+/** A Teoria's flavor text is written around one specific example pair of Catalizzatori (the two
+ * `**bold**` names, in slotA/slotB order) — but any Catalizzatore of the right type can actually
+ * be placed there. Left as-is, every Teoria built with a different pair still reads as if you'd
+ * used the example one, which undersells the game's real combinatorial variety. This swaps each
+ * bold name for whichever Catalizzatore was actually placed in that slot, whenever the two
+ * differ — only where `testuale` confirms that bold span really is a Catalizzatore reference (the
+ * couple of Teorie with an unresolved `null` marker are left untouched) — and repairs the article
+ * immediately before it (even fused with a preposition: "dalla", "nel", "dell'") to agree with
+ * the new Catalizzatore's gender and number, so "Il Governo Ombra" correctly becomes "La
+ * Fondazione Occulta" instead of staying "Il Fondazione Occulta". */
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
-  const matchesA = !testuale[0] || theory.slotA.filled?.def.id === testuale[0];
-  const matchesB = !testuale[1] || theory.slotB.filled?.def.id === testuale[1];
-  if (matchesA && matchesB) return flavor;
+  let idx = 0;
+  return flavor.replace(/(\S+\s+)?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
+    const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
+    const testId = testuale[idx];
+    idx += 1;
+    if (!testId || !slot?.filled || slot.filled.def.name === inner) return match;
 
-  const nameA = theory.slotA.filled?.def.name;
-  const nameB = theory.slotB.filled?.def.name;
-  if (!nameA || !nameB) return flavor;
-
-  const { description } = splitFlavor(flavor);
-  const leadIn = TABLOID_LEAD_INS[theory.flavorVariant % TABLOID_LEAD_INS.length];
-  const quoteTemplate = TABLOID_QUOTES[Math.floor(theory.flavorVariant / TABLOID_LEAD_INS.length) % TABLOID_QUOTES.length];
-  const quote = `${leadIn(theory.def.name)} ${quoteTemplate(nameA, nameB)}`;
-  return description ? `${description} ${quote}` : quote;
+    const newDef = slot.filled.def;
+    let newPrefix = prefix ?? '';
+    if (prefix) {
+      const word = prefix.trim();
+      const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
+      if (reagreed) newPrefix = prefix.replace(word, reagreed);
+    }
+    return `${newPrefix}**${newDef.name}**`;
+  });
 }
 
 /** Renders a Theory's flavor as a general description line, followed on its own line by the
@@ -375,7 +339,6 @@ export function TheoryCardView({
   highlightSlotB,
   highlightAttach,
   isNewsTargetable,
-  fullText,
 }: {
   theory: TheoryInstance;
   isOwn: boolean;

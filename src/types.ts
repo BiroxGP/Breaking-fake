@@ -48,6 +48,11 @@ export interface CatalystDef {
   points: number;
   flavor: string;
   image: string;
+  /** Grammatical gender/number of the name's head noun, e.g. "Fondazione Occulta" is f/singular
+   * and "Rettiliani Infiltrati" is m/plural — used to pick the right article when a Teoria's
+   * flavor text substitutes in whichever Catalizzatore was actually placed. */
+  gender: 'm' | 'f';
+  plural?: boolean;
 }
 
 export interface NewsDef {
@@ -130,11 +135,6 @@ export interface TheoryInstance {
   closed: boolean;
   closeOrder: number | null;
   extraNewsRequired: number;
-  /** Picked once when the Teoria is drafted, so which tabloid stand-in sentence it gets (when the
-   * placed Catalizzatori aren't the exact example pair) is genuinely random but stays fixed
-   * across re-renders — rather than derived from `uid`, whose sequential counter produced a
-   * near-cyclic, barely-varying pick. */
-  flavorVariant: number;
 }
 
 export interface Player {

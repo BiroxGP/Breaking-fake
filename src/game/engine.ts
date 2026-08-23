@@ -510,7 +510,6 @@ export function buildTheoryInstance(def: TheoryDef, ownerId: string): TheoryInst
     closed: false,
     closeOrder: null,
     extraNewsRequired: 0,
-    flavorVariant: Math.floor(Math.random() * 1000),
   };
 }
 
