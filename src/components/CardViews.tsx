@@ -10,6 +10,7 @@ import {
 } from '../game/resonanceEffects';
 import { canCloseTheory } from '../game/rules';
 import { reagreeArticle } from '../game/italianArticles';
+import { reagreeVerbFor } from '../game/verbAgreement';
 import { Magnify } from './HoverPreview';
 
 function Stars({ n }: { n: number }) {
@@ -111,35 +112,49 @@ function splitFlavor(flavor: string): { description: string; quote: string } {
  * used the example one, which undersells the game's real combinatorial variety. This swaps each
  * bold name for whichever Catalizzatore was actually placed in that slot, whenever the two
  * differ — only where `testuale` confirms that bold span really is a Catalizzatore reference (the
- * couple of Teorie with an unresolved `null` marker are left untouched) — and repairs the article
- * immediately before it (even fused with a preposition: "dalla", "nel", "dell'") to agree with
- * the new Catalizzatore's gender and number, so "Il Governo Ombra" correctly becomes "La
- * Fondazione Occulta" instead of staying "Il Fondazione Occulta". */
+ * couple of Teorie with an unresolved `null` marker are left untouched) — and repairs both the
+ * article immediately before it (even fused with a preposition: "dalla", "nel", "dell'") and, for
+ * the short list of Teorie in `verbAgreement.ts` where that Catalizzatore is the verb's subject,
+ * the verb right after it — so "Il Governo Ombra occulta" correctly becomes "Gli Osservatori
+ * occultano" instead of staying singular. */
 export function personalizedFlavor(theory: TheoryInstance): string {
   const { flavor, testuale } = theory.def;
   let idx = 0;
   // The word right before "**" is either space-separated ("Il **Governo**") or, for an elided
   // article, directly attached with no space at all ("Nell'**Area 51**") — the two alternatives
   // below catch each case; a plain preposition or verb with no article matches neither and is
-  // left as undefined, same as before.
-  return flavor.replace(/((?:\S+\s+)|(?:\S*['’]))?\*\*(.+?)\*\*/g, (match, prefix: string | undefined, inner: string) => {
-    const slot = idx === 0 ? theory.slotA : idx === 1 ? theory.slotB : null;
-    const testId = testuale[idx];
-    idx += 1;
-    if (!testId || !slot?.filled || slot.filled.def.name === inner) return match;
+  // left as undefined, same as before. The word right after "**" is captured the same way, for
+  // the rarer case where that Catalizzatore is the subject of the following verb.
+  return flavor.replace(
+    /((?:\S+\s+)|(?:\S*['’]))?\*\*(.+?)\*\*(\s+\S+)?/g,
+    (match, prefix: string | undefined, inner: string, suffix: string | undefined) => {
+      const slotIndex = idx;
+      const slot = slotIndex === 0 ? theory.slotA : slotIndex === 1 ? theory.slotB : null;
+      const testId = testuale[slotIndex];
+      idx += 1;
+      if (!testId || !slot?.filled || slot.filled.def.name === inner) return match;
 
-    const newDef = slot.filled.def;
-    let newPrefix = prefix ?? '';
-    if (prefix) {
-      const word = prefix.trim();
-      const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
-      // Rebuilt from scratch rather than patched in place: whether a space belongs before "**"
-      // depends on the *new* article, not the old one — "un'" (elided) attaches directly, "un"
-      // needs a space, and swapping between the two (e.g. "Nell'" -> "Nelle") changes which.
-      if (reagreed) newPrefix = reagreed.endsWith("'") ? reagreed : `${reagreed} `;
-    }
-    return `${newPrefix}**${newDef.name}**`;
-  });
+      const newDef = slot.filled.def;
+      let newPrefix = prefix ?? '';
+      if (prefix) {
+        const word = prefix.trim();
+        const reagreed = reagreeArticle(word, newDef.name, newDef.gender, newDef.plural);
+        // Rebuilt from scratch rather than patched in place: whether a space belongs before "**"
+        // depends on the *new* article, not the old one — "un'" (elided) attaches directly, "un"
+        // needs a space, and swapping between the two (e.g. "Nell'" -> "Nelle") changes which.
+        if (reagreed) newPrefix = reagreed.endsWith("'") ? reagreed : `${reagreed} `;
+      }
+
+      let newSuffix = suffix ?? '';
+      if (suffix) {
+        const word = suffix.trim();
+        const reagreed = reagreeVerbFor(theory.def.id, slotIndex === 0 ? 0 : 1, word, newDef.plural);
+        if (reagreed) newSuffix = ` ${reagreed}`;
+      }
+
+      return `${newPrefix}**${newDef.name}**${newSuffix}`;
+    },
+  );
 }
 
 /** Renders a Theory's flavor as a general description line, followed on its own line by the

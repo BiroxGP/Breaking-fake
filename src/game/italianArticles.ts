@@ -24,12 +24,12 @@ export function definiteArticleFor(name: string, gender: Gender, plural?: boolea
 export function indefiniteArticleFor(name: string, gender: Gender, plural?: boolean): string {
   const vowel = startsWithVowelSound(name);
   const impure = startsWithImpureCluster(name);
-  // Italian has no true indefinite plural article ("un/una" only exist singular) — "delle Tracce
+  // Italian has no true indefinite plural article ("un/una" only exist singular) — "alcune Tracce
   // Isotopiche" ("some Isotopic Traces") is how "un/una" naturally extends to a plural noun.
-  if (plural) {
-    if (gender === 'f') return 'delle';
-    return vowel || impure ? 'degli' : 'dei';
-  }
+  // ("dei/degli/delle" would work as a partitive too, but those are *also* "di" fused with a
+  // definite article — when the original text already had a separate, unfused "di" before "un"
+  // ("di un **Cristallo**"), reusing them collides into a doubled-up "di delle...".)
+  if (plural) return gender === 'f' ? 'alcune' : 'alcuni';
   if (gender === 'f') return vowel ? "un'" : 'una';
   return impure ? 'uno' : 'un';
 }
