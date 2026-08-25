@@ -117,7 +117,7 @@ export function initDraft(prev: GameState): GameState {
   const theoryDeck = [...state.theoryDeck];
   for (const p of state.players) {
     const picks = [];
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const t = theoryDeck.pop();
       if (t) picks.push(t);
     }

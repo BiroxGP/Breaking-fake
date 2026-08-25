@@ -170,7 +170,7 @@ function DraftPicker({
       <SelectionSummary picked={pickedDefs} />
 
       <div className="text-white/40 text-xs uppercase tracking-widest mt-6 mb-1 self-start max-w-3xl w-full">
-        Le 5 Teorie tra cui scegliere
+        Le 6 Teorie tra cui scegliere
       </div>
       <div className="grid sm:grid-cols-2 gap-3 max-w-3xl w-full">
         {choices.map((def) => (

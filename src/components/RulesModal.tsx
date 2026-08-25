@@ -35,6 +35,11 @@ export function RulesModal({
           Punti Vittoria (PV).
         </Section>
 
+        <Section title="Scelta delle Teorie">
+          A inizio partita ricevi 6 Teorie e ne tieni 3: quelle scelte formano il tuo set per tutta la
+          partita, le altre vengono scartate.
+        </Section>
+
         <Section title="Turno">
           <ol className="list-decimal list-inside space-y-1">
             <li>Pesca: scegli come dividere 2 carte tra Catalizzatori e Notizie, più 1 Risonanza obbligatoria.</li>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { GameState } from './types';
 import { createGame, initDraft, type NewPlayerConfig } from './game/setup';
 import {
@@ -87,8 +87,6 @@ interface ActionResult {
   error?: string;
 }
 
-const TUTORIAL_AUTO_SHOWN_KEY = 'breaking-fake-tutorial-auto-shown';
-
 export default function App() {
   const [screen, setScreen] = useState<Screen>('landing');
   const [state, setState] = useState<GameState | null>(null);
@@ -96,6 +94,13 @@ export default function App() {
   const [actionError, setActionError] = useState<string | null>(null);
   const [tutorialActive, setTutorialActive] = useState(false);
   const [tutorialSeen, setTutorialSeen] = useState<Set<string>>(new Set());
+  // Il tutorial parte attivo di default; dopo che una partita è stata portata a termine, se se ne
+  // avvia una nuova lo disattiviamo in automatico (l'utente resta comunque libero di riattivarlo).
+  const hasCompletedGameRef = useRef(false);
+
+  useEffect(() => {
+    if (state?.phase === 'gameover') hasCompletedGameRef.current = true;
+  }, [state?.phase]);
 
   useEffect(() => {
     if (!state) return;
@@ -138,10 +143,7 @@ export default function App() {
     setState(game);
     setScreen('game');
     setTutorialSeen(new Set());
-    if (!localStorage.getItem(TUTORIAL_AUTO_SHOWN_KEY)) {
-      setTutorialActive(true);
-      localStorage.setItem(TUTORIAL_AUTO_SHOWN_KEY, '1');
-    }
+    setTutorialActive(!hasCompletedGameRef.current);
   };
 
   const restart = () => {
