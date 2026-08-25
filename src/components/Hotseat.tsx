@@ -15,7 +15,10 @@ export function Hotseat({
 
   if (!revealed) {
     return (
-      <div className="fixed inset-0 z-40 bg-ink/95 backdrop-blur flex flex-col items-center justify-center gap-6 p-6 text-center">
+      <div
+        data-hotseat-curtain=""
+        className="fixed inset-0 z-40 bg-ink/95 backdrop-blur flex flex-col items-center justify-center gap-6 p-6 text-center"
+      >
         <EyeOff size={40} className="text-accent2" />
         <div>
           <div className="text-white/50 text-sm">Passa il dispositivo a</div>

@@ -121,8 +121,12 @@ export function TutorialOverlay({
     const sameRect = (a: DOMRect | null, b: DOMRect | null) =>
       a === b || (!!a && !!b && a.left === b.left && a.top === b.top && a.width === b.width && a.height === b.height);
     const update = () => {
+      // The Hotseat "pass the device" curtain sits above the board (TopBar included) rather than
+      // replacing it, so a step's target can exist in the DOM while still hidden behind it —
+      // suppress the spotlight until the curtain is dismissed.
+      const curtain = document.querySelector('[data-hotseat-curtain]');
       const s = stepRef.current;
-      const el = s ? document.querySelector(`[data-tutorial="${s.selector}"]`) : null;
+      const el = !curtain && s ? document.querySelector(`[data-tutorial="${s.selector}"]`) : null;
       const next = el ? el.getBoundingClientRect() : null;
       setRect((prev) => (sameRect(prev, next) ? prev : next));
     };
