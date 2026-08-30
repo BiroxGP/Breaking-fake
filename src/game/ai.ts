@@ -11,9 +11,10 @@ import {
   resolveRecycle,
   startDrawPhase,
   submitDraftPick,
+  substituteStuckNews,
 } from './engine';
-import { canCloseTheory, maxAttachableNews } from './rules';
-import { LEVEL_POINTS, NEGATIVE_EFFECTS, POSITIVE_EFFECTS, canAttachNewsToTheory } from './resonanceEffects';
+import { canCloseTheory, isTheorySoftLocked, maxAttachableNews } from './rules';
+import { LEVEL_POINTS, NEGATIVE_EFFECTS, POSITIVE_EFFECTS, canAttachNewsToTheory, newsCategoryOnTheory } from './resonanceEffects';
 import type { CatalystInstance, NewsInstance } from '../types';
 
 export function aiPickDraft(defs: TheoryDef[]): string[] {
@@ -57,6 +58,19 @@ function findSpotForNews(theories: TheoryInstance[], news: NewsInstance) {
   return null;
 }
 
+/** Only worth spending the Azione if the replacement actually clears the lock (i.e. it lands as
+ * Principale for this Teoria) — swapping one dead Secondaria for another wastes the turn. */
+function findSubstitutionSpot(theories: TheoryInstance[], news: NewsInstance) {
+  for (const t of theories) {
+    if (!isTheorySoftLocked(t)) continue;
+    if (newsCategoryOnTheory(news, t) !== 'Principale') continue;
+    const oldNews = t.attachedNews[0];
+    if (!oldNews) continue;
+    return { theory: t, oldNewsUid: oldNews.uid };
+  }
+  return null;
+}
+
 export function aiCloseAllPossible(initial: GameState, playerId: string): GameState {
   let state = initial;
   let progress = true;
@@ -92,6 +106,13 @@ export function aiAttemptSingleAction(initial: GameState): { state: GameState; a
   }
 
   const newsCards = player.hand.filter((c): c is NewsInstance => c.kind === 'news');
+  for (const newsCard of newsCards) {
+    const subSpot = findSubstitutionSpot(player.theories, newsCard);
+    if (subSpot) {
+      const res = substituteStuckNews(initial, playerId, subSpot.oldNewsUid, newsCard.uid, subSpot.theory.uid);
+      if (!res.error) return { state: res.state, acted: true };
+    }
+  }
   for (const newsCard of newsCards) {
     const spot = findSpotForNews(player.theories, newsCard);
     if (spot) {
