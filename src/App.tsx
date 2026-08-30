@@ -15,6 +15,7 @@ import {
   resolveRecycle,
   startDrawPhase,
   submitDraftPick,
+  substituteStuckNews,
 } from './game/engine';
 import {
   aiAttemptSingleAction,
@@ -200,6 +201,12 @@ export default function App() {
           runResult((s) => {
             const playerId = s.players[s.currentPlayerIndex].id;
             return attachNews(s, playerId, cardUid, theoryUid);
+          })
+        }
+        onSubstituteNews={(oldNewsUid, newCardUid, theoryUid) =>
+          runResult((s) => {
+            const playerId = s.players[s.currentPlayerIndex].id;
+            return substituteStuckNews(s, playerId, oldNewsUid, newCardUid, theoryUid);
           })
         }
         onCloseTheory={(theoryUid) =>

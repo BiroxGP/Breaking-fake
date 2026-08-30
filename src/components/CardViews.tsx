@@ -8,7 +8,7 @@ import {
   isEffectivelyPrincipale,
   newsScoreContribution,
 } from '../game/resonanceEffects';
-import { canCloseTheory } from '../game/rules';
+import { canCloseTheory, isTheorySoftLocked } from '../game/rules';
 import { reagreeArticle } from '../game/italianArticles';
 import { reagreeVerbFor } from '../game/verbAgreement';
 import { Magnify } from './HoverPreview';
@@ -272,6 +272,16 @@ export function NewsCardView({
           </div>
         )}
         {!small && <div className="text-[10px] text-white/50 leading-snug">{card.def.flavor}</div>}
+        {!small && card.history.length > 0 && (
+          <div className="mt-1 pt-1 border-t border-white/10 flex flex-col gap-0.5">
+            <span className="text-[8px] text-accent2 font-bold uppercase tracking-wide">Risonanze giocate</span>
+            {card.history.map((line, i) => (
+              <div key={i} className="text-[9px] text-white/40 leading-snug">
+                {line}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </button>
   );
@@ -374,10 +384,11 @@ export function TheoryCardView({
   isNewsTargetable?: (news: NewsInstance) => boolean;
 }) {
   const closeable = !theory.closed && canCloseTheory(theory);
+  const softLocked = isTheorySoftLocked(theory);
   const cardEl = (
     <div
       className={`rounded-xl border ${
-        theory.closed ? 'border-gold/60' : 'border-white/10'
+        theory.closed ? 'border-gold/60' : softLocked ? 'border-accent/60' : 'border-white/10'
       } bg-panel overflow-hidden flex flex-col w-60 shrink-0 ${theory.closed ? 'opacity-90' : ''}`}
     >
       <div className="bg-gradient-to-r from-panel2 to-ink px-2 py-1.5 flex items-center justify-between">
@@ -387,6 +398,14 @@ export function TheoryCardView({
           <span className="text-gold font-bold">{theory.def.basePV}pt</span>
         </span>
       </div>
+      {softLocked && (
+        <div
+          className="px-2 py-1 bg-accent/15 border-b border-accent/30 text-[10px] text-accent flex items-center gap-1"
+          title="Notizie al massimo ma nessuna Principale (o Virale): serve sostituirne una per poter chiudere la Teoria."
+        >
+          ⚠️ Bloccata: nessuna Notizia Principale{isOwn ? ' — clicca una Notizia per sostituirla' : ''}
+        </div>
+      )}
       <CroppedArt src={theory.def.image} alt={theory.def.name} crop={THEORY_ART_CROP} className="w-full" />
       <div className="px-2 pt-1.5">
         <div className="font-display text-lg leading-tight text-white">{theory.def.name}</div>

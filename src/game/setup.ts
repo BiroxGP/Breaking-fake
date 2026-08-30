@@ -33,6 +33,7 @@ function buildNewsInstances(copies: number): NewsInstance[] {
         pointsHalved: false,
         pointsCapAt2: false,
         lockedByVerification: false,
+        history: [],
       });
     }
   }

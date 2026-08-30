@@ -109,6 +109,10 @@ export interface NewsInstance {
   pointsHalved: boolean;
   pointsCapAt2: boolean;
   lockedByVerification: boolean;
+  /** One line per Risonanza played on this Notizia, e.g. `Marco gioca "Fuori Contesto": ...` —
+   * kept on the instance so the card's zoom view can show what happened to it, since only the
+   * net numeric result (Diffusione, punti) is otherwise visible on the board. */
+  history: string[];
 }
 
 export interface ResonanceInstance {

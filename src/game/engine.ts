@@ -9,7 +9,7 @@ import type {
 } from '../types';
 import { nextUid, shuffle } from './ids';
 import { applyResonanceEffect, canAttachNewsToTheory } from './resonanceEffects';
-import { canCloseTheory, maxAttachableNews } from './rules';
+import { canCloseTheory, isTheorySoftLocked, maxAttachableNews } from './rules';
 import { computeScores } from './scoring';
 
 const HAND_LIMIT = 10;
@@ -227,6 +227,62 @@ export function attachNews(
   return { state };
 }
 
+/** Escape valve for a soft-locked Teoria (see isTheorySoftLocked): lets the owner swap one of the
+ * stuck Notizie for a new one from hand, in place of a normal "attach" action. Costs the self
+ * Azione like any other move on your own Teoria; the new Notizia opens a normal Finestra di
+ * Reazione, same as attachNews. */
+export function substituteStuckNews(
+  prev: GameState,
+  actingPlayerId: string,
+  oldNewsUid: string,
+  newCardUid: string,
+  theoryUid: string,
+): ActionResult {
+  const state = clone(prev);
+  const actingPlayer = state.players.find((p) => p.id === actingPlayerId);
+  if (!actingPlayer) return { state: prev, error: 'Giocatore non trovato.' };
+  if (state.actionsLeft <= 0) return { state: prev, error: 'Nessuna azione disponibile.' };
+  if (state.selfActionUsed) return { state: prev, error: 'Hai già giocato la tua azione su te stesso questo turno.' };
+
+  const theory = findTheory(state, theoryUid);
+  if (!theory) return { state: prev, error: 'Teoria non trovata.' };
+  if (theory.ownerId !== actingPlayerId) return { state: prev, error: 'Puoi sostituire Notizie solo sulle tue Teorie.' };
+  if (!isTheorySoftLocked(theory)) {
+    return { state: prev, error: 'Questa Teoria non è bloccata: collega la Notizia normalmente.' };
+  }
+
+  const oldNews = theory.attachedNews.find((n) => n.uid === oldNewsUid);
+  if (!oldNews) return { state: prev, error: 'Notizia da sostituire non trovata su questa Teoria.' };
+
+  const cardIdx = actingPlayer.hand.findIndex((c) => c.uid === newCardUid);
+  if (cardIdx === -1) return { state: prev, error: 'Carta non trovata in mano.' };
+  const newCard = actingPlayer.hand[cardIdx];
+  if (newCard.kind !== 'news') return { state: prev, error: 'La carta non è una Notizia.' };
+  if (!canAttachNewsToTheory(newCard, theory)) {
+    return {
+      state: prev,
+      error: `"${newCard.def.name}" non è compatibile con il topic "${theory.def.topic}" di questa Teoria.`,
+    };
+  }
+
+  actingPlayer.hand.splice(cardIdx, 1);
+  theory.attachedNews = theory.attachedNews.filter((n) => n.uid !== oldNewsUid);
+  state.newsDiscard.push(oldNews);
+  newCard.attackerId = actingPlayerId;
+  theory.attachedNews.push(newCard);
+  state.actionsLeft -= 1;
+  state.selfActionUsed = true;
+
+  addLog(
+    state,
+    `${actingPlayer.name} sblocca "${theory.def.name}" sostituendo "${oldNews.def.name}" con "${newCard.def.name}".`,
+  );
+
+  startReactionWindow(state, newCard.uid, theory.uid, theory.ownerId, actingPlayerId);
+
+  return { state };
+}
+
 function triggerRicicloTattico(state: GameState, actingPlayer: Player, deckType: 'catalyst' | 'news') {
   const options: (CatalystInstance | NewsInstance)[] = [];
   for (let i = 0; i < 3; i++) {
@@ -331,6 +387,7 @@ export function playResonanceCard(prev: GameState, playerId: string, cardUid: st
 
   player.hand.splice(cardIdx, 1);
   const outcome = applyResonanceEffect(news, theory, card.def.effectId);
+  news.history.push(`${player.name} gioca "${card.def.name}": ${outcome.detail}`);
   state.resonanceDiscard.push(card);
   if (outcome.removeFromTheory) {
     theory.attachedNews = theory.attachedNews.filter((n) => n.uid !== news.uid);
@@ -371,6 +428,7 @@ export function playImmediateResonance(
 
   player.hand.splice(cardIdx, 1);
   const outcome = applyResonanceEffect(news, theory, card.def.effectId);
+  news.history.push(`${player.name} gioca "${card.def.name}": ${outcome.detail}`);
   state.resonanceDiscard.push(card);
   if (outcome.removeFromTheory) {
     theory.attachedNews = theory.attachedNews.filter((n) => n.uid !== news.uid);

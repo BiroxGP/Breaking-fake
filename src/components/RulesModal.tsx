@@ -74,6 +74,13 @@ export function RulesModal({
           Secondaria diventata Virale) su quella Teoria.
         </Section>
 
+        <Section title="Teoria Bloccata">
+          Su una Teoria a 2 o 3 stelle è possibile restare con tutte le Notizie collegate al massimo
+          consentito ma nessuna Principale (o Virale) tra loro: la Teoria non può più chiudersi né
+          accettare altre Notizie. In questo caso puoi sostituire una qualsiasi delle Notizie già
+          collegate con una nuova dalla mano, con un'Azione: quella rimossa va scartata.
+        </Section>
+
         <Section title="Punteggio finale">
           Solo le Teorie chiuse contano: valore base + valore Catalizzatori + diffusione Notizie, più i
           bonus Coerenza Testuale (+5), Monopolio (+5 per teoria dello stesso tipo oltre la prima), Scoop
